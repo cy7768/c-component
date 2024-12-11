@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    // 指定 ECMAScript 目标版本
+    "target": "ESNext",
+    // 对类字段使用 Object.defineProperty 定义
+    "useDefineForClassFields": true,
+    // 指定模块系统
+    "module": "ESNext",
+    // 指定模块解析策略
+    "moduleResolution": "bundler",
+    // 启用所有严格的类型检查选项
+    "strict": true,
+    // 保留 JSX 语法，交给后续工具处理
+    "jsx": "preserve",
+    // 生成源映射文件
+    "sourceMap": true,
+    // 允许导入 JSON 文件
+    "resolveJsonModule": true,
+    // 确保每个文件都被视为单独的模块
+    "isolatedModules": true,
+    // 允许导入 CommonJS 模块
+    "esModuleInterop": true,
+    // 指定要包含的库文件
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    // 跳过声明文件的类型检查
+    "skipLibCheck": true,
+    "baseUrl": "."
+  },
+  // 指定要包含的文件匹配模式
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ],
+  // 项目引用，用于多项目结构
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

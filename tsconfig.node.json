@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    // 启用项目引用功能，用于构建时的增量编译
+    "composite": true,
+    // 跳过对声明文件（.d.ts）的类型检查，提高编译速度
+    "skipLibCheck": true,
+    // 使用 ESNext 模块系统
+    "module": "ESNext",
+    // 设置模块解析策略为 bundler，适用于 Vite 等打包工具
+    "moduleResolution": "bundler",
+    // 允许导入没有设置默认导出的模块时使用默认导入语法
+    "allowSyntheticDefaultImports": true
+  },
+  // 仅包含 vite.config.ts 配置文件
+  "include": ["vite.config.ts"]
+}
