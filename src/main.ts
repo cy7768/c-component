@@ -6,7 +6,7 @@ import router from './router'
 import 'element-plus/dist/index.css'
 
 // 导入组件库
-import Components from './components'
+import Components from './package/components'
 
 const app = createApp(App)
 

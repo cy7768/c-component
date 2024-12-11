@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { CButton, CInput } from '../components'
+import { CButton, CInput } from '../package/components'
 import { ElButton, ElInput } from 'element-plus/es'
 
 const inputValue = ref('')
