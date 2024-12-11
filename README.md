@@ -17,9 +17,9 @@ pnpm add c-component
 
 | 依赖项       | 版本要求 |
 | ------------ | -------- |
-| Vue          | ^3.2.0   |
+| Vue          | ^3.5.13   |
 | TypeScript   | ^5.2.2   |
-| Element Plus | ^2.0.0   |
+| Element Plus | ^2.9.0   |
 | @vueuse/core | ^12.0.0  |
 
 ## 快速开始
