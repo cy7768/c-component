@@ -55,9 +55,9 @@
     "url": "git+https://github.com/cy7768/c-component.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/c-component/issues"
+    "url": "https://github.com/cy7768/c-component/issues"
   },
-  "homepage": "https://github.com/yourusername/c-component#readme",
+  "homepage": "https://github.com/cy7768/c-component/blob/main/README.md",
   "publishConfig": {
     "access": "public"
   },
