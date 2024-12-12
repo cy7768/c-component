@@ -1,85 +1,56 @@
-import { defineComponent as s, resolveComponent as a, openBlock as u, createBlock as r, withCtx as m, renderSlot as f, mergeProps as $ } from "vue";
-import { ElButton as C, ElInput as _ } from "element-plus";
-const k = s({
+import { defineComponent as a, openBlock as u, createBlock as p, unref as d, withCtx as i, renderSlot as m, mergeProps as r } from "vue";
+import { ElButton as f, ElInput as c } from "element-plus";
+const C = /* @__PURE__ */ a({
   name: "CButton",
-  components: { ElButton: C },
+  __name: "button",
   props: {
-    type: {
-      type: String,
-      default: "default"
-    },
-    size: {
-      type: String,
-      default: "default"
-    },
-    disabled: {
-      type: Boolean,
-      default: !1
-    }
+    type: { default: "default" },
+    size: { default: "default" },
+    disabled: { type: Boolean, default: !1 }
   },
   emits: ["click"],
-  setup(e, { emit: t }) {
-    return { handleClick: (o) => {
-      t("click", o);
-    } };
+  setup(l, { emit: t }) {
+    const n = t;
+    return (e, o) => (u(), p(d(f), {
+      type: e.type,
+      size: e.size,
+      disabled: e.disabled,
+      onClick: o[0] || (o[0] = (s) => n("click", s))
+    }, {
+      default: i(() => [
+        m(e.$slots, "default")
+      ]),
+      _: 3
+    }, 8, ["type", "size", "disabled"]));
   }
-}), d = (e, t) => {
-  const n = e.__vccOpts || e;
-  for (const [o, l] of t)
-    n[o] = l;
-  return n;
-};
-function y(e, t, n, o, l, i) {
-  const p = a("el-button");
-  return u(), r(p, {
-    type: e.type,
-    size: e.size,
-    disabled: e.disabled,
-    onClick: e.handleClick
-  }, {
-    default: m(() => [
-      f(e.$slots, "default")
-    ]),
-    _: 3
-  }, 8, ["type", "size", "disabled", "onClick"]);
-}
-const b = /* @__PURE__ */ d(k, [["render", y]]), h = s({
+}), B = /* @__PURE__ */ a({
   name: "CInput",
-  components: { ElInput: _ },
+  __name: "input",
   props: {
-    modelValue: {
-      type: [String, Number],
-      default: ""
-    }
+    modelValue: {}
   },
   emits: ["update:modelValue"],
-  setup(e, { emit: t }) {
-    return { handleInput: (o) => {
-      t("update:modelValue", o);
-    } };
+  setup(l, { emit: t }) {
+    const n = t;
+    return (e, o) => (u(), p(d(c), r({
+      "model-value": e.modelValue,
+      "onUpdate:modelValue": o[0] || (o[0] = (s) => n("update:modelValue", s))
+    }, e.$attrs), null, 16, ["model-value"]));
   }
 });
-function I(e, t, n, o, l, i) {
-  const p = a("el-input");
-  return u(), r(p, $({
-    modelValue: e.modelValue,
-    "onUpdate:modelValue": t[0] || (t[0] = (c) => e.modelValue = c)
-  }, e.$attrs, { onInput: e.handleInput }), null, 16, ["modelValue", "onInput"]);
-}
-const V = /* @__PURE__ */ d(h, [["render", I]]);
-const B = {
-  CButton: b,
-  CInput: V
-}, S = {
+const _ = {
+  CButton: C,
+  CInput: B
+}, y = {
   // install 方法会在 Vue.use() 时被调用
-  install(e) {
-    Object.entries(B).forEach(([t, n]) => {
-      e.component(t, n);
+  install(l) {
+    Object.entries(_).forEach(([t, n]) => {
+      l.component(t, n);
     });
   }
 };
 export {
-  b as CButton,
-  V as CInput,
-  S as default
+  C as CButton,
+  B as CInput,
+  y as default
 };

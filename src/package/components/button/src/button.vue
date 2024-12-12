@@ -1,45 +1,32 @@
 <template>
-  <el-button 
-    :type="type"
-    :size="size"
-    :disabled="disabled"
-    @click="handleClick"
-  >
+  <el-button :type="type as any" :size="size as any" :disabled="disabled" @click="emit('click', $event)">
     <slot></slot>
   </el-button>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script setup lang="ts">
 import { ElButton } from 'element-plus'
 
-export default defineComponent({
-  name: 'CButton',
-  components: { ElButton },
-  props: {
-    type: {
-      type: String,
-      default: 'default'
-    },
-    size: {
-      type: String,
-      default: 'default'
-    },
-    disabled: {
-      type: Boolean,
-      default: false
-    }
-  },
-  emits: ['click'],
-  setup(props, { emit }) {
-    const handleClick = (e: MouseEvent) => {
-      emit('click', e)
-    }
-    return { handleClick }
-  }
+type ButtonType = '' | 'default' | 'primary' | 'success' | 'warning' | 'info' | 'danger' | 'text'
+type ButtonSize = '' | 'default' | 'small' | 'large'
+
+defineOptions({
+  name: 'CButton'
 })
+
+const props = withDefaults(defineProps<{
+  type?: ButtonType
+  size?: ButtonSize
+  disabled?: boolean
+}>(), {
+  type: 'default',
+  size: 'default',
+  disabled: false
+})
+
+const emit = defineEmits<{
+  click: [e: MouseEvent]
+}>()
 </script>
 
-<style lang="scss" scoped>
-
-</style> 
+<style lang="scss" scoped></style>

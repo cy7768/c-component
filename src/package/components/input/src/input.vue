@@ -1,34 +1,21 @@
 <template>
-  <el-input
-    v-model="modelValue"
-    v-bind="$attrs"
-    @input="handleInput"
-  />
+  <el-input :model-value="modelValue" @update:modelValue="emit('update:modelValue', $event)" v-bind="$attrs" />
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue'
+<script setup lang="ts">
 import { ElInput } from 'element-plus'
 
-export default defineComponent({
-  name: 'CInput',
-  components: { ElInput },
-  props: {
-    modelValue: {
-      type: [String, Number],
-      default: ''
-    }
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const handleInput = (value: string) => {
-      emit('update:modelValue', value)
-    }
-    return { handleInput }
-  }
+defineOptions({
+  name: 'CInput'
 })
+
+const props = defineProps<{
+  modelValue?: string | number
+}>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: string]
+}>()
 </script>
 
-<style lang="scss" scoped>
-
-</style> 
+<style lang="scss" scoped></style>
