@@ -1,9 +1,18 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    dts({
+      entryRoot: resolve(__dirname),
+      include: ['components/**/*.vue', 'components/**/*.ts', 'index.ts'],
+      outDir: 'dist',
+      tsconfigPath: resolve(__dirname, './tsconfig.json')
+    })
+  ],
   build: {
     lib: {
       entry: resolve(__dirname, 'index.ts'),
@@ -11,10 +20,11 @@ export default defineConfig({
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`
     },
     rollupOptions: {
-      external: ['vue'],
+      external: ['vue', 'element-plus'],
       output: {
         globals: {
-          vue: 'Vue'
+          vue: 'Vue',
+          'element-plus': 'ElementPlus'
         },
         exports: 'named'
       }
