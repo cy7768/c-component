@@ -191,7 +191,7 @@ const columns = [
               text: '修改',
               type: 'primary',
               show: row.role === 'admin',
-              handler: () => handleEdit($index, row,editing)
+              handler: () => tableRef.value?.handleEdit($index,row)
             },
             {
               text: '删除',
@@ -233,7 +233,7 @@ const handleFieldChange = (index: number, prop: string, value: any) => {
   console.log('字段变化:', { index, prop, value })
 }
 
-const handleEdit = (index: number, row: Record<string, any>,editing:boolean) => {
+const handleEdit = (index: number, row: Record<string, any>) => {
   row.editing = true
 }
 
