@@ -4,6 +4,8 @@ import { App } from 'vue'
 import CButton from './components/button/src/button.vue'
 // 导入自定义输入框组件
 import CInput from './components/input/src/input.vue'
+// 导入自定义表格组件
+import CTable from './components/table/src/table.vue'
 
 // 引入 Element Plus 样式
 import 'element-plus/dist/index.css'
@@ -13,7 +15,8 @@ import 'element-plus/dist/index.css'
 // 组件集合对象，用于批量注册
 const components = {
   CButton,
-  CInput
+  CInput,
+  CTable
 }
 
 // 导出默认对象，包含 install 方法供 Vue.use() 使用
@@ -29,4 +32,4 @@ export default {
 }
 
 // 导出单个组件，支持按需引入
-export { CButton, CInput }
+export { CButton, CInput, CTable }

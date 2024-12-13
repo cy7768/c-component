@@ -67,6 +67,17 @@
         </div>
       </div>
     </div>
+
+    <div class="test-container">
+      <h2>表格组件测试</h2>
+      <c-table
+        ref="tableRef"
+        :data="tableData"
+        :columns="columns"
+        @save="handleSave"
+        @field-change="handleFieldChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -77,6 +88,163 @@ import { ElButton, ElInput } from 'element-plus/es'
 
 const inputValue = ref('')
 const clearableValue = ref('')
+const tableRef = ref()
+const originalData = ref<TableRow[]>([])
+
+interface TableRow {
+  id: number
+  name: string
+  age: number
+  role: string
+  birth: string
+  score: number
+  remark: string
+  editing?: boolean
+}
+
+const tableData = ref<TableRow[]>([
+  {
+    id: 1,
+    name: '张三',
+    age: 25,
+    role: 'admin',
+    birth: '1998-01-01',
+    score: 85,
+    remark: '这是一条测试备注'
+  },
+  {
+    id: 2,
+    name: '李四',
+    age: 30,
+    role: 'user',
+    birth: '1993-05-15',
+    score: 92,
+    remark: '优秀员工',
+  }
+])
+
+const columns = [
+  { 
+    prop: 'id', 
+    label: 'ID',
+    width: 80,
+    fixed: 'left'
+  },
+  { 
+    prop: 'name', 
+    label: '姓名', 
+    editable: true,
+    required: true
+  },
+  { 
+    prop: 'age', 
+    label: '年龄', 
+    editable: true,
+    type: 'number',
+    min: 0,
+    max: 100,
+    onChange: (value: number) => {
+      console.log('年龄变化:', value)
+    }
+  },
+  {
+    prop: 'role',
+    label: '角色',
+    editable: true,
+    type: 'select',
+    options: [
+      { label: '管理员', value: 'admin' },
+      { label: '用户', value: 'user' }
+    ]
+  },
+  {
+    prop: 'birth',
+    label: '出生日期',
+    editable: true,
+    type: 'date'
+  },
+  {
+    prop: 'score',
+    label: '分数',
+    editable: true,
+    type: 'number',
+    min: 0,
+    max: 100,
+    formatter: (value: number) => `${value}分`
+  },
+  {
+    prop: 'remark',
+    label: '备注',
+    editable: true,
+    type: 'textarea',
+    width: 200
+  },
+  {
+    prop: 'operation',
+    label: '操作',
+    width: 200,
+    fixed: 'right',
+    render: ({ row, $index, editing }) => {
+      const buttons = !editing
+        ? [
+            {
+              text: '修改',
+              type: 'primary',
+              show: row.role === 'admin',
+              handler: () => handleEdit($index, row,editing)
+            },
+            {
+              text: '删除',
+              type: 'danger',
+              show: row.role === 'admin',
+              handler: () => tableData.value.splice($index, 1)
+            },
+            {
+              text: '查看',
+              type: 'info',
+              show: row.role === 'user',
+              handler: () => console.log('查看详情:', row)
+            }
+          ]
+        : [
+            {
+              text: '确定',
+              type: 'success',
+              handler: () => handleSave($index, row)
+            },
+            {
+              text: '重置',
+              type: 'warning',
+              handler: () => handleReset($index)
+            }
+          ]
+
+      return tableRef.value?.renderButtonGroup({ buttons }, $index, row)
+    }
+  }
+]
+
+const handleSave = (index: number, row: any) => {
+  row.editing = false
+  console.log('保存行数据:', index, row)
+}
+
+const handleFieldChange = (index: number, prop: string, value: any) => {
+  console.log('字段变化:', { index, prop, value })
+}
+
+const handleEdit = (index: number, row: Record<string, any>,editing:boolean) => {
+  row.editing = true
+}
+
+// 重置行数据
+const handleReset = (index: number) => {
+  if (tableData.value[index]) {
+    const original = { ...tableData.value[index] }
+    original.editing = false
+    tableData.value[index] = original
+  }
+}
 </script>
 
 <style scoped>
@@ -137,5 +305,9 @@ const clearableValue = ref('')
 .input-group > * {
   width: 100%;
   max-width: 300px;
+}
+
+.test-container {
+  padding: 20px;
 }
 </style> 
