@@ -5,13 +5,19 @@
                 <el-table-column v-bind="column">
                     <template #default="scope">
                         <template v-if="column.editable">
-                            <div @dblclick="handleCellDblClick(scope.$index, column.prop)"
-                                @click.stop="handleCellClick(scope.$index, column.prop)">
-                                <component v-if="scope.row.editing && isEditingCell(scope.$index, column.prop)"
-                                    :is="getComponent(column.type)" v-model="scope.row[column.prop]"
+                            <div 
+                                @click="handleCellTrigger(scope.$index, column.prop, column, 'click')"
+                                @dblclick="handleCellTrigger(scope.$index, column.prop, column, 'dblclick')"
+                            >
+                                <component 
+                                    v-if="isCellEditable(column, scope.$index)" 
+                                    :is="getComponent(column.type)"
+                                    v-model="scope.row[column.prop]" 
                                     v-bind="getComponentProps(column)"
+                                    :ref="el => setCellRef(scope.$index, column.prop, el)"
                                     @change="handleFieldChange(scope.$index, column.prop, $event)"
-                                    @blur="handleCellBlur(scope.$index, column.prop)" />
+                                    @blur="handleCellBlur(scope.$index, column.prop)" 
+                                />
                                 <template v-else>
                                     <template v-if="column.formatter">
                                         {{ column.formatter(scope.row[column.prop], scope.row) }}
@@ -62,6 +68,7 @@ import {
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 type EditableType = 'input' | 'select' | 'date' | 'number' | 'textarea'
+type TriggerType = 'click' | 'dblclick'
 
 interface TableColumn {
     prop: string
@@ -86,15 +93,21 @@ interface TableColumn {
         column: TableColumn
         editing: boolean
     }) => VNode | VNode[]
+    editMode?: 'cell' | 'row'
+    trigger?: TriggerType
 }
 
 interface Props {
     data: Record<string, any>[]
     columns: TableColumn[]
+    editMode?: 'cell' | 'row'
+    trigger?: TriggerType
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    columns: () => []
+    columns: () => [],
+    editMode: 'row',
+    trigger: 'dblclick'
 })
 
 const emit = defineEmits<{
@@ -169,8 +182,62 @@ watch(() => props.data, (newVal) => {
     }
 }, { immediate: true })
 
-// 编辑行
+// 修改编辑单元格状态的数据结构
+interface EditingCell {
+    rowIndex: number
+    prop: string
+}
+
+// 使用数组存储多个编辑单元格
+const editingCells = ref<EditingCell[]>([])
+
+// 判断单元格是否处于编辑状态
+const isEditingCell = (rowIndex: number, prop: string) => {
+    return editingCells.value.some(cell =>
+        cell.rowIndex === rowIndex && cell.prop === prop
+    )
+}
+
+// 添加编辑单元格
+const addEditingCell = (rowIndex: number, prop: string) => {
+    if (!isEditingCell(rowIndex, prop)) {
+        if (props.editMode === 'cell') {
+            editingCells.value = [{ rowIndex, prop }]
+        } else {
+            tableData.value[rowIndex].editing = !tableData.value[rowIndex].editing ? true : false
+            editingCells.value.push({ rowIndex, prop })
+        }
+    }
+}
+
+// 移除编辑单元格
+const removeEditingCell = (rowIndex: number, prop: string) => {
+    editingCells.value = editingCells.value.filter(cell =>
+        !(cell.rowIndex === rowIndex && cell.prop === prop)
+    )
+}
+
+// 判断单元格是否可编辑
+const isCellEditable = (column: TableColumn, rowIndex: number) => {
+    if (!column.editable) return false
+
+    // 优先使用列的编辑模式配置
+    const mode = column.editMode || props.editMode
+
+    if (mode === 'row') {
+        // 行编辑模式：当前行处于编辑状态时可编辑
+        return tableData.value[rowIndex].editing
+    } else {
+        // 单元格编辑模式：当前单元格处于编辑状态时可编辑
+        return isEditingCell(rowIndex, column.prop)
+    }
+}
+
+// 修改编辑行函数
 const handleEdit = (index: number, row: Record<string, any>) => {
+    if (props.editMode === 'cell') {
+        return
+    }
     // 先保存其他正在编辑的行
     tableData.value.forEach((item, idx) => {
         if (item.editing && idx !== index) {
@@ -181,72 +248,49 @@ const handleEdit = (index: number, row: Record<string, any>) => {
     // 设置当前行为编辑状态
     row.editing = true
 
-    // 找到第一个可编辑的单元格并设置为编辑状态
-    const editableColumn = props.columns.filter(col => col.editable)
-    if (editableColumn.length > 0) {
-        editableColumn.map(col => {
-            currentEditingCell.value = {
-                rowIndex: index,
-                prop: col.prop
-            }
-        })
+    // 根据编辑模式处理可编辑单元格
+    const editableColumns = props.columns.filter(col => col.editable)
 
+    editableColumns.forEach(col => {
+        addEditingCell(index, col.prop);
+    })
+
+}
+
+// 修改保存处理函数
+const handleSave = (index: number) => {
+    const row = tableData.value[index]
+    row.editing = false
+    // 清除该行所有编辑单元格
+    editingCells.value = editingCells.value.filter(cell => cell.rowIndex !== index)
+    emit('save', index, row)
+    emit('update:data', tableData.value.map(({ editing, ...rest }) => rest))
+}
+
+// 修改取消处理函数
+const handleCancel = (index: number) => {
+    if (originalData.value[index]) {
+        tableData.value[index] = JSON.parse(JSON.stringify(originalData.value[index]))
     }
+    tableData.value[index].editing = false
+    // 清除该行所有编辑单元格
+    editingCells.value = editingCells.value.filter(cell => cell.rowIndex !== index)
 }
 
-// 添加编辑单元格状态
-interface EditingCell {
-    rowIndex: number
-    prop: string
-}
-
-const currentEditingCell = ref<EditingCell | null>(null)
-
-// 判断单元格是否于编辑状态
-const isEditingCell = (rowIndex: number, prop: string) => {
-    return currentEditingCell.value?.rowIndex === rowIndex &&
-        currentEditingCell.value?.prop === prop
-}
-
-// 处理单元格点击
-const handleCellClick = (rowIndex: number, prop: string) => {
-    // 如果点击的不是当前编辑单元格，且存在编辑中的单元格
-    if (currentEditingCell.value &&
-        (currentEditingCell.value.rowIndex !== rowIndex ||
-            currentEditingCell.value.prop !== prop)) {
-        handleSave(currentEditingCell.value.rowIndex)
-    }
-}
-
-// 修改双击处理函数
-const handleCellDblClick = (rowIndex: number, prop: string) => {
-    // 如果存在其他编辑中的单元格，先保存
-    if (currentEditingCell.value &&
-        (currentEditingCell.value.rowIndex !== rowIndex ||
-            currentEditingCell.value.prop !== prop)) {
-        handleSave(currentEditingCell.value.rowIndex)
-    }
-
-    if (!tableData.value[rowIndex].editing) {
-        tableData.value[rowIndex].editing = true
-    }
-    currentEditingCell.value = { rowIndex, prop }
-}
-
-// 处理单元格失焦
+// 修改单元格失焦处理函数
 const handleCellBlur = (rowIndex: number, prop: string) => {
     if (isEditingCell(rowIndex, prop)) {
-        currentEditingCell.value = null
+        if (props.editMode === 'cell') {
+            removeEditingCell(rowIndex, prop)
+        }
 
-        // 检查是否所有编辑单元格都已失焦
-        const isLastEditingCell = !props.columns.some(col =>
-            col.editable && isEditingCell(rowIndex, col.prop)
-        )
 
-        // 如果是最后一个编辑单元格，自动保存
-        if (isLastEditingCell) {
+        // 检查否所有编辑单元格都已失焦
+        const hasEditingCells = editingCells.value.some(cell => cell.rowIndex === rowIndex)
+
+        // 如果该行没有编辑中的单元格，自动保存
+        if (!hasEditingCells) {
             setTimeout(() => {
-                // 使用 setTimeout 避免与其他单元格的点击件冲突
                 const row = tableData.value[rowIndex]
                 if (row.editing) {
                     handleSave(rowIndex)
@@ -256,22 +300,36 @@ const handleCellBlur = (rowIndex: number, prop: string) => {
     }
 }
 
-// 修改保存处理函数
-const handleSave = (index: number) => {
-    const row = tableData.value[index]
-    row.editing = false
-    currentEditingCell.value = null
-    emit('save', index, row)
-    emit('update:data', tableData.value.map(({ editing, ...rest }) => rest))
+// 存储编辑组件的引用
+const cellRefs = ref<Map<string, any>>(new Map())
+
+// 设置单元格组件引用
+const setCellRef = (rowIndex: number, prop: string, el: any) => {
+    if (el) {
+        cellRefs.value.set(`${rowIndex}-${prop}`, el)
+    }
 }
 
-// 修改取消处理函数
-const handleCancel = (index: number) => {
-    // 从原始数据恢复
-    if (originalData.value[index]) {
-        tableData.value[index] = JSON.parse(JSON.stringify(originalData.value[index]))
+// 统一处理单元格触发
+const handleCellTrigger = (rowIndex: number, prop: string, column: TableColumn, triggerType: TriggerType) => {
+    // 优先使用列配置，否则使用全局配置
+    const triggerMode = column.trigger || props.trigger
+    
+    if (triggerMode === triggerType) {
+        addEditingCell(rowIndex, prop)
+        
+        // 等待 DOM 更新后聚焦
+        setTimeout(() => {
+            const ref = cellRefs.value.get(`${rowIndex}-${prop}`)
+            if (ref) {
+                if (ref.focus) {
+                    ref.focus()
+                } else if (ref.$el && ref.$el.querySelector('input')) {
+                    ref.$el.querySelector('input').focus()
+                }
+            }
+        })
     }
-    tableData.value[index].editing = false
 }
 
 // 字值变化

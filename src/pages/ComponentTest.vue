@@ -74,6 +74,8 @@
         ref="tableRef"
         :data="tableData"
         :columns="columns"
+        edit-mode="row"
+        trigger="dblclick"
         @save="handleSave"
         @field-change="handleFieldChange"
       />
@@ -134,7 +136,9 @@ const columns = [
     prop: 'name', 
     label: '姓名', 
     editable: true,
-    required: true
+    required: true,
+    editMode: 'cell',
+    trigger: 'dblclick'
   },
   { 
     prop: 'age', 
@@ -145,7 +149,8 @@ const columns = [
     max: 100,
     onChange: (value: number) => {
       console.log('年龄变化:', value)
-    }
+    },
+    trigger: 'click'
   },
   {
     prop: 'role',
