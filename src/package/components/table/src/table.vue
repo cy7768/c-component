@@ -231,23 +231,25 @@ const isCellEditable = (column: TableColumn, rowIndex: number) => {
 const handleEdit = (index: number, row: Record<string, any>) => {
     if (props.editMode === 'cell') {
         return
+    } else if (props.editMode === 'row') {
+        // 先保存其他正在编辑的行
+        tableData.value.forEach((item, idx) => {
+            if (item.editing && idx !== index) {
+                handleSave(idx)
+            }
+        })
+
+        // 设置当前行为编辑状态
+        row.editing = true
+
+        // 根据编辑模式处理可编辑单元格
+        const editableColumns = props.columns.filter(col => col.editable)
+
+        editableColumns.forEach(col => {
+            addEditingCell(index, col.prop);
+        })
+
     }
-    // 先保存其他正在编辑的行
-    tableData.value.forEach((item, idx) => {
-        if (item.editing && idx !== index) {
-            handleSave(idx)
-        }
-    })
-
-    // 设置当前行为编辑状态
-    // row.editing = true
-
-    // 根据编辑模式处理可编辑单元格
-    const editableColumns = props.columns.filter(col => col.editable)
-
-    editableColumns.forEach(col => {
-        addEditingCell(index, col.prop);
-    })
 
 }
 
