@@ -1,6 +1,6 @@
 {
   "name": "@cy7768/sup-ui",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "description": "Vue 3 + TS component library",
   "main": "dist/index.js",
@@ -8,7 +8,8 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "components"
+    "components",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "vite build",
