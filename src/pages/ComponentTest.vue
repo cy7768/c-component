@@ -74,8 +74,6 @@
         ref="tableRef"
         :data="tableData"
         :columns="columns"
-        edit-mode="row"
-        trigger="dblclick"
         @save="handleSave"
         @field-change="handleFieldChange"
       />
@@ -137,7 +135,6 @@ const columns = [
     label: '姓名', 
     editable: true,
     required: true,
-    editMode: 'cell',
     trigger: 'dblclick'
   },
   { 
@@ -150,7 +147,6 @@ const columns = [
     onChange: (value: number) => {
       console.log('年龄变化:', value)
     },
-    trigger: 'click'
   },
   {
     prop: 'role',
@@ -189,7 +185,11 @@ const columns = [
     label: '操作',
     width: 200,
     fixed: 'right',
-    render: ({ row, $index, editing }) => {
+    render: ({ row, $index, editing }: { 
+        row: TableRow
+        $index: number
+        editing: boolean 
+    }) => {
       const buttons = !editing
         ? [
             {
@@ -235,11 +235,10 @@ const handleSave = (index: number, row: any) => {
 }
 
 const handleFieldChange = (index: number, prop: string, value: any) => {
-  console.log('字段变化:', { index, prop, value })
+  console.log('���段变化:', { index, prop, value })
 }
 
 const handleEdit = (index: number, row: Record<string, any>) => {
-  row.editing = true
 }
 
 // 重置行数据

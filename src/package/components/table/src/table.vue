@@ -5,19 +5,13 @@
                 <el-table-column v-bind="column">
                     <template #default="scope">
                         <template v-if="column.editable">
-                            <div 
-                                @click="handleCellTrigger(scope.$index, column.prop, column, 'click')"
-                                @dblclick="handleCellTrigger(scope.$index, column.prop, column, 'dblclick')"
-                            >
-                                <component 
-                                    v-if="isCellEditable(column, scope.$index)" 
-                                    :is="getComponent(column.type)"
-                                    v-model="scope.row[column.prop]" 
-                                    v-bind="getComponentProps(column)"
+                            <div @click="handleCellTrigger(scope.$index, column.prop, column, 'click')"
+                                @dblclick="handleCellTrigger(scope.$index, column.prop, column, 'dblclick')">
+                                <component v-if="isCellEditable(column, scope.$index)" :is="getComponent(column.type)"
+                                    v-model="scope.row[column.prop]" v-bind="getComponentProps(column)"
                                     :ref="el => setCellRef(scope.$index, column.prop, el)"
                                     @change="handleFieldChange(scope.$index, column.prop, $event)"
-                                    @blur="handleCellBlur(scope.$index, column.prop)" 
-                                />
+                                    @blur="handleCellBlur(scope.$index, column.prop)" />
                                 <template v-else>
                                     <template v-if="column.formatter">
                                         {{ column.formatter(scope.row[column.prop], scope.row) }}
@@ -106,8 +100,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
     columns: () => [],
-    editMode: 'row',
-    trigger: 'dblclick'
+    editMode: undefined,
+    trigger: undefined
 })
 
 const emit = defineEmits<{
@@ -203,7 +197,7 @@ const addEditingCell = (rowIndex: number, prop: string) => {
     if (!isEditingCell(rowIndex, prop)) {
         if (props.editMode === 'cell') {
             editingCells.value = [{ rowIndex, prop }]
-        } else {
+        } else if (props.editMode === 'row') {
             tableData.value[rowIndex].editing = !tableData.value[rowIndex].editing ? true : false
             editingCells.value.push({ rowIndex, prop })
         }
@@ -227,7 +221,7 @@ const isCellEditable = (column: TableColumn, rowIndex: number) => {
     if (mode === 'row') {
         // 行编辑模式：当前行处于编辑状态时可编辑
         return tableData.value[rowIndex].editing
-    } else {
+    } else if (mode === 'cell') {
         // 单元格编辑模式：当前单元格处于编辑状态时可编辑
         return isEditingCell(rowIndex, column.prop)
     }
@@ -237,23 +231,25 @@ const isCellEditable = (column: TableColumn, rowIndex: number) => {
 const handleEdit = (index: number, row: Record<string, any>) => {
     if (props.editMode === 'cell') {
         return
+    } else if (props.editMode === 'row') {
+        // 先保存其他正在编辑的行
+        tableData.value.forEach((item, idx) => {
+            if (item.editing && idx !== index) {
+                handleSave(idx)
+            }
+        })
+
+        // 设置当前行为编辑状态
+        row.editing = true
+
+        // 根据编辑模式处理可编辑单元格
+        const editableColumns = props.columns.filter(col => col.editable)
+
+        editableColumns.forEach(col => {
+            addEditingCell(index, col.prop);
+        })
+
     }
-    // 先保存其他正在编辑的行
-    tableData.value.forEach((item, idx) => {
-        if (item.editing && idx !== index) {
-            handleSave(idx)
-        }
-    })
-
-    // 设置当前行为编辑状态
-    row.editing = true
-
-    // 根据编辑模式处理可编辑单元格
-    const editableColumns = props.columns.filter(col => col.editable)
-
-    editableColumns.forEach(col => {
-        addEditingCell(index, col.prop);
-    })
 
 }
 
@@ -314,10 +310,10 @@ const setCellRef = (rowIndex: number, prop: string, el: any) => {
 const handleCellTrigger = (rowIndex: number, prop: string, column: TableColumn, triggerType: TriggerType) => {
     // 优先使用列配置，否则使用全局配置
     const triggerMode = column.trigger || props.trigger
-    
+
     if (triggerMode === triggerType) {
         addEditingCell(rowIndex, prop)
-        
+
         // 等待 DOM 更新后聚焦
         setTimeout(() => {
             const ref = cellRefs.value.get(`${rowIndex}-${prop}`)
