@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, h } from 'vue'
+import { ref, watch, h, VNode } from 'vue'
 import {
     ElConfigProvider,
     ElTable,
