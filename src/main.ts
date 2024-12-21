@@ -4,6 +4,7 @@ import router from './router'
 
 // 导入 Element Plus
 import 'element-plus/dist/index.css'
+import 'element-plus/theme-chalk/dark/css-vars.css'
 
 // 导入组件库
 import Components from './package/components'

@@ -2,11 +2,13 @@ import { App } from 'vue'
 import Button from './button/src/button.vue'
 import Input from './input/src/input.vue'
 import Table from './table/src/table.vue'
+import Form from './form/src/form.vue'
 
 const components = {
   CButton: Button,
   CInput: Input,
-  CTable: Table
+  CTable: Table,
+  CForm: Form
 }
 
 export default {
@@ -17,4 +19,4 @@ export default {
   }
 }
 
-export { Button as CButton, Input as CInput, Table as CTable }
+export { Button as CButton, Input as CInput, Table as CTable, Form as CForm }
