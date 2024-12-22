@@ -33,7 +33,6 @@
           <div class="button-group">
             <CButton disabled>禁用按钮</CButton>
             <CButton type="primary" disabled>禁用主要按钮</CButton>
-            <ElButton type="primary">禁用按钮</ElButton>
           </div>
         </div>
       </div>
@@ -53,7 +52,6 @@
         <div class="component-container">
           <div class="input-group">
             <CInput disabled placeholder="禁用状态" />
-            <ElInput disabled placeholder="Element Plus 禁用状态" />
           </div>
         </div>
       </div>
@@ -72,33 +70,37 @@
         <div class="component-container">
           <c-form ref="formRef" v-model="formData" :fields="formFields" :max-display-fields="3" show-add-field
             @submit="handleFormSubmit" @reset="handleFormReset" @change="handleFormChange">
-            <template #buttons>
-              <el-button type="info">自定义按钮</el-button>
-            </template>
           </c-form>
+        </div>
+      </div>
+      <div class="test-item">
+        <h2>动态添加搜索条件</h2>
+        <div class="component-container">
+          <c-search ref="searchRef" v-model="formData" :fields="formFields" :max-display-fields="3" show-add-field
+            @submit="handleFormSubmit" @reset="handleFormReset" @change="handleFormChange">
+          </c-search>
         </div>
       </div>
     </div>
 
     <div class="test-item">
       <h2>可编辑表格</h2>
-      <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'" @save="handleSave"
-        @field-change="handleFieldChange" />
+      <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'"
+        @save="handleSave" @field-change="handleFieldChange" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CButton, CInput } from '../package/components'
-import { ElButton, ElInput, ElSelect, ElOption } from 'element-plus/es'
-import type { FormField } from '../package/components/form/src/form.vue'
+import { CButton, CInput } from '../package/index'
 
 const inputValue = ref('')
 const clearableValue = ref('')
 const tableRef = ref()
 const originalData = ref<TableRow[]>([])
 const formRef = ref()
+const searchRef = ref()
 
 interface TableRow {
   id: number

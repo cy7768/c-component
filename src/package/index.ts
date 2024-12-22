@@ -1,35 +1,49 @@
-// 导入 Vue 的 App 类型，用于插件安装
 import { App } from 'vue'
-// 导入自定义按钮组件
+// 导入基础组件
 import CButton from './components/button/src/button.vue'
-// 导入自定义输入框组件
 import CInput from './components/input/src/input.vue'
-// 导入自定义表格组件
 import CTable from './components/table/src/table.vue'
+import CForm from './components/form/src/form.vue'
+import CSearch from './components/form/src/search.vue'
 
-// 引入 Element Plus 样式
+// 引入 Element Plus 的基础样式
 import 'element-plus/dist/index.css'
-// 引入自定义样式（如果有）
-// import './styles/index.css'
 
-// 组件集合对象，用于批量注册
+/**
+ * 组件集合，用于全局注册
+ * 包含：
+ * - CButton: 按钮组件
+ * - CInput: 输入框组件
+ * - CTable: 表格组件
+ * - CForm: 表单组件
+ * - CSearch: 搜索组件
+ */
 const components = {
   CButton,
   CInput,
-  CTable
+  CTable,
+  CForm,
+  CSearch
 }
 
-// 导出默认对象，包含 install 方法供 Vue.use() 使用
+/**
+ * 组件库入口
+ * 提供 install 方法供 Vue.use() 注册组件库
+ */
 export default {
-  // install 方法会在 Vue.use() 时被调用
   install(app: App) {
-    // 遍历组件集合，注册每个组件
-    Object.entries(components).forEach(([key, component]) => {
-      // 全局注册组件，组件名为对象的 key
-      app.component(key, component)
+    // 遍历注册所有组件
+    Object.entries(components).forEach(([name, component]) => {
+      app.component(name, component)
     })
   }
 }
 
 // 导出单个组件，支持按需引入
-export { CButton, CInput, CTable }
+export {
+  CButton,   // 按钮组件
+  CInput,    // 输入框组件
+  CTable,    // 表格组件
+  CForm,     // 表单组件  
+  CSearch     // 搜索组件
+}
