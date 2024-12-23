@@ -1,12 +1,12 @@
 <template>
     <div>
-        <el-form ref="formRef" :model="computedFormData" :rules="formRules" v-bind="$attrs" inline
+        <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline
             class="horizontal-form">
             <div class="form-content">
                 <el-form-item v-for="field in displayFields" :key="field.prop" :label="field.label" :prop="field.prop"
                     :rules="field.rules" class="form-item">
                     <div class="form-item-content">
-                        <component :is="renderComponent(field)" v-model="computedFormData[field.prop]"
+                        <component :is="renderComponent(field)" v-model="formData[field.prop]"
                             v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)" />
                         <el-button v-if="field.removable !== false" type="danger" link @click="removeField(field.prop)">
                             <el-icon>
@@ -130,20 +130,6 @@ const formRef = ref<FormInstance>()
 const formData = ref<Record<string, any>>({})
 const formRules = ref<Record<string, any>>({})
 
-// 使用 computed 处理表单数据
-const computedFormData = computed({
-    get: () => formData.value,
-    set: (newVal) => {
-        const oldValStr = JSON.stringify(formData.value)
-        const newValStr = JSON.stringify(newVal)
-
-        if (oldValStr !== newValStr) {
-            formData.value = JSON.parse(newValStr)
-            emit('update:modelValue', newVal)
-        }
-    }
-})
-
 // 监听外部数据变化
 watch(() => props.modelValue, (newVal) => {
     formData.value = JSON.parse(JSON.stringify(newVal))
@@ -175,15 +161,16 @@ const renderComponent = (field: FormField) => {
                 name: 'CheckboxGroup',
                 render() {
                     return h(ElCheckboxGroup, {
-                        modelValue: computedFormData.value[field.prop],
+                        modelValue: formData.value[field.prop],
                         'onUpdate:modelValue': (val: any) => {
-                            computedFormData.value[field.prop] = val
+                            formData.value[field.prop] = val
                         }
                     }, () => field.options?.map(opt =>
                         h(ElCheckbox, {
                             key: opt.value,
-                            label: opt.value
-                        }, () => opt.label)
+                            value: opt.value,
+                            label: opt.label
+                        })
                     ))
                 }
             }
@@ -290,7 +277,7 @@ const addField = (field: FormField) => {
 
     // 初始化字段值
     if (!(field.prop in formData.value)) {
-        formData.value[field.prop] = null
+        formData.value[field.prop] = field.type === 'checkbox' ? [] : null
     }
 
     ElMessage.success(`添加字段 "${field.label}" 成功`)

@@ -1,18 +1,21 @@
 <template>
     <div>
-        <el-form ref="formRef" :model="computedFormData" :rules="formRules" v-bind="$attrs" inline
-            class="horizontal-form">
+        <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline class="horizontal-form">
             <div class="form-content">
                 <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop" :rules="field.rules"
                     class="form-item">
                     <div class="form-item-content">
-                        <el-select :model-value="selectedFields[field.label]"
-                            @update:model-value="getFields(field.label)" clearable class="form-item-select"
-                            @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
-                            <el-option v-for="option in getAvailableOptions(field)" :key="option.prop"
-                                :value="option.prop" :label="option.label" :disabled="option.disabled" />
-                        </el-select>
-                        <component :is="renderComponent(field)" v-model="computedFormData[field.prop]"
+                        <el-tooltip class="box-item" effect="dark" :content="field.label"
+                            placement="top-start">
+                            <el-select :model-value="selectedFields[field.label]"
+                                @update:model-value="getFields(field.label)" clearable class="form-item-select"
+                                @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
+                                <el-option v-for="option in getAvailableOptions(field)" :key="option.prop"
+                                    :value="option.prop" :label="option.label" :disabled="option.disabled" />
+                            </el-select>
+
+                        </el-tooltip>
+                        <component :is="renderComponent(field)" v-model="formData[field.prop]"
                             v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)">
                         </component>
                     </div>
@@ -63,6 +66,7 @@ import {
     ElSpace,
     ElMessage,
     ElIcon,
+    ElTooltip
 } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 
@@ -130,20 +134,6 @@ const formRef = ref<FormInstance>()
 const formData = ref<Record<string, any>>({})
 const formRules = ref<Record<string, any>>({})
 
-// 使用 computed 处理表单数据
-const computedFormData = computed({
-    get: () => formData.value,
-    set: (newVal) => {
-        const oldValStr = JSON.stringify(formData.value)
-        const newValStr = JSON.stringify(newVal)
-
-        if (oldValStr !== newValStr) {
-            formData.value = JSON.parse(newValStr)
-            emit('update:modelValue', newVal)
-        }
-    }
-})
-
 // 监听外部数据变化
 watch(() => props.modelValue, (newVal) => {
     formData.value = JSON.parse(JSON.stringify(newVal))
@@ -175,15 +165,16 @@ const renderComponent = (field: FormField) => {
                 name: 'CheckboxGroup',
                 render() {
                     return h(ElCheckboxGroup, {
-                        modelValue: computedFormData.value[field.prop],
+                        modelValue: formData.value[field.prop],
                         'onUpdate:modelValue': (val: any) => {
-                            computedFormData.value[field.prop] = val
+                            formData.value[field.prop] = val
                         }
                     }, () => field.options?.map(opt =>
                         h(ElCheckbox, {
                             key: opt.value,
-                            label: opt.value
-                        }, () => opt.label)
+                            value: opt.value,
+                            label: opt.label
+                        })
                     ))
                 }
             }
@@ -302,7 +293,7 @@ const addField = (field: FormField) => {
 
     // 初始化字段值
     if (!(field.prop in formData.value)) {
-        formData.value[field.prop] = null
+        formData.value[field.prop] = field.type === 'checkbox' ? [] : null
     }
 
     ElMessage.success(`添加字段 "${field.label}" 成功`)
@@ -385,8 +376,8 @@ const handleFieldTypeChange = (newProp: string, oldField: FormField) => {
     }
 
     // 保存旧值并删除
-    const oldValue = computedFormData.value[oldField.prop]
-    delete computedFormData.value[oldField.prop]
+    const oldValue = formData.value[oldField.prop]
+    delete formData.value[oldField.prop]
 
     // 完全更新字段配置，保持原有的可移除状态
     displayFields.value[currentIndex] = {
@@ -394,10 +385,10 @@ const handleFieldTypeChange = (newProp: string, oldField: FormField) => {
         removable: oldField.removable
     }
 
-    // 设置新字段的值为 null
+    // // 设置新字段的值为 null
     // computedFormData.value[newField.prop] = null
 
-    // 触发变化事件
+    // // 触发变化事件
     // emit('change', newField.prop, computedFormData.value[newField.prop])
 }
 
@@ -436,7 +427,7 @@ const handleAddField = () => {
 
     // 初始化新字段的值
     if (!(availableField.prop in formData.value)) {
-        formData.value[availableField.prop] = null
+        formData.value[availableField.prop] = availableField.type === 'checkbox' ? [] : null
     }
 }
 
