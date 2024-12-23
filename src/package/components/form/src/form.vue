@@ -126,13 +126,18 @@ const emit = defineEmits<{
 
 const computedFields = ref<FormField[]>(Object.assign([], props.fields))
 
+// 修改显示字段的计算属性
+const displayFields = ref<FormField[]>(Object.assign([], computedFields.value.slice(0, props.maxDisplayFields)));
+
 const formRef = ref<FormInstance>()
 const formData = ref<Record<string, any>>({})
 const formRules = ref<Record<string, any>>({})
 
 // 监听外部数据变化
 watch(() => props.modelValue, (newVal) => {
-    formData.value = JSON.parse(JSON.stringify(newVal))
+    displayFields.value.forEach(field => {
+        formData.value[field.prop] = newVal[field.prop]
+    })
 }, { immediate: true })
 
 // 组件映射表
@@ -298,9 +303,6 @@ const removeField = (prop: string) => {
 
 // 添加字段选择相关的状态
 const selectedField = ref('')
-
-// 修改显示字段的计算属性
-const displayFields = ref<FormField[]>(Object.assign([], computedFields.value.slice(0, props.maxDisplayFields)));
 
 // 修改可用字段的计算属性
 const availableFields = computed(() =>

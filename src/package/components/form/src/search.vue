@@ -5,8 +5,7 @@
                 <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop" :rules="field.rules"
                     class="form-item">
                     <div class="form-item-content">
-                        <el-tooltip class="box-item" effect="dark" :content="field.label"
-                            placement="top-start">
+                        <el-tooltip class="box-item" effect="dark" :content="field.label" placement="top-start">
                             <el-select :model-value="selectedFields[field.label]"
                                 @update:model-value="getFields(field.label)" clearable class="form-item-select"
                                 @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
@@ -128,7 +127,10 @@ const emit = defineEmits<{
     'change': [prop: string, value: any]
 }>()
 
-const computedFields = ref<FormField[]>(Object.assign([], props.fields))
+const computedFields = ref<FormField[]>(Object.assign([], props.fields));
+
+// 修改显示字段的计算属性
+const displayFields = ref<FormField[]>(Object.assign([], computedFields.value.slice(0, props.maxDisplayFields)));
 
 const formRef = ref<FormInstance>()
 const formData = ref<Record<string, any>>({})
@@ -136,7 +138,9 @@ const formRules = ref<Record<string, any>>({})
 
 // 监听外部数据变化
 watch(() => props.modelValue, (newVal) => {
-    formData.value = JSON.parse(JSON.stringify(newVal))
+    displayFields.value.forEach(field => {
+        formData.value[field.prop] = newVal[field.prop]
+    })
 }, { immediate: true })
 
 // 修改组件映射表
@@ -318,9 +322,6 @@ const selectedFields = ref<{ [key: string]: string }>({});
 props.fields.forEach(f => {
     selectedFields.value[f.label] = f.prop;
 })
-
-// 修改显示字段的计算属性
-const displayFields = ref<FormField[]>(Object.assign([], computedFields.value.slice(0, props.maxDisplayFields)));
 
 // 修改可用字段的计算属性
 const availableFields = computed(() =>
