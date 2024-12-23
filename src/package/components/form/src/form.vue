@@ -6,10 +6,12 @@
                 <el-form-item v-for="field in displayFields" :key="field.prop" :label="field.label" :prop="field.prop"
                     :rules="field.rules" class="form-item">
                     <div class="form-item-content">
-                        <component :is="getComponent(field.type)" v-model="computedFormData[field.prop]"
+                        <component :is="renderComponent(field)" v-model="computedFormData[field.prop]"
                             v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)" />
                         <el-button v-if="field.removable !== false" type="danger" link @click="removeField(field.prop)">
-                            <el-icon><CircleCloseFilled /></el-icon>
+                            <el-icon>
+                                <CircleCloseFilled />
+                            </el-icon>
                         </el-button>
                     </div>
                 </el-form-item>
@@ -40,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, reactive } from 'vue'
+import { ref, watch, computed, h, reactive } from 'vue'
 import { CircleCloseFilled } from '@element-plus/icons-vue'
 import {
     ElForm,
@@ -165,6 +167,31 @@ const getComponent = (type: FieldType) => {
     return componentMap[type]
 }
 
+// 添加渲染组件的方法
+const renderComponent = (field: FormField) => {
+    switch (field.type) {
+        case 'checkbox':
+            return {
+                name: 'CheckboxGroup',
+                render() {
+                    return h(ElCheckboxGroup, {
+                        modelValue: computedFormData.value[field.prop],
+                        'onUpdate:modelValue': (val: any) => {
+                            computedFormData.value[field.prop] = val
+                        }
+                    }, () => field.options?.map(opt =>
+                        h(ElCheckbox, {
+                            key: opt.value,
+                            label: opt.value
+                        }, () => opt.label)
+                    ))
+                }
+            }
+        default:
+            return getComponent(field.type)
+    }
+}
+
 // 获取组件属性
 const getComponentProps = (field: FormField) => {
     const commonProps = {
@@ -204,6 +231,11 @@ const getComponentProps = (field: FormField) => {
                 ...commonProps,
                 type: 'password',
                 showPassword: true
+            }
+        case 'checkbox':
+            return {
+                ...commonProps,
+                options: field.options,
             }
         default:
             return commonProps

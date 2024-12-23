@@ -3,29 +3,18 @@
         <el-form ref="formRef" :model="computedFormData" :rules="formRules" v-bind="$attrs" inline
             class="horizontal-form">
             <div class="form-content">
-                <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop"
-                    :rules="field.rules" class="form-item">
+                <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop" :rules="field.rules"
+                    class="form-item">
                     <div class="form-item-content">
-                        <el-select v-model="field.prop" clearable class="form-item-select" @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
-                            <el-option 
-                                v-for="option in getAvailableOptions(field)"
-                                :key="option.prop"
-                                :value="option.prop"
-                                :label="option.label"
-                                :disabled="option.disabled"
-                            />
+                        <el-select :model-value="selectedFields[field.label]"
+                            @update:model-value="getFields(field.label)" clearable class="form-item-select"
+                            @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
+                            <el-option v-for="option in getAvailableOptions(field)" :key="option.prop"
+                                :value="option.prop" :label="option.label" :disabled="option.disabled" />
                         </el-select>
-                        <component 
-                            :is="getComponent(field.type)" 
-                            v-model="computedFormData[field.prop]"
-                            v-bind="getComponentProps(field)" 
-                            @change="handleFieldChange(field.prop, $event)" 
-                        />
-                        <el-button v-if="field.removable !== false" type="danger" link @click="removeField(field.prop)">
-                            <el-icon>
-                                <CircleCloseFilled />
-                            </el-icon>
-                        </el-button>
+                        <component :is="renderComponent(field)" v-model="computedFormData[field.prop]"
+                            v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)">
+                        </component>
                     </div>
                 </el-form-item>
                 <el-space>
@@ -52,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, reactive } from 'vue'
+import { ref, watch, computed, h, reactive } from 'vue'
 import { CircleCloseFilled } from '@element-plus/icons-vue'
 import {
     ElForm,
@@ -67,6 +56,7 @@ import {
     ElRadioGroup,
     ElCheckbox,
     ElCheckboxGroup,
+    ElCheckboxButton,
     ElButton,
     ElRow,
     ElCol,
@@ -159,7 +149,7 @@ watch(() => props.modelValue, (newVal) => {
     formData.value = JSON.parse(JSON.stringify(newVal))
 }, { immediate: true })
 
-// 组件映射表
+// 修改组件映射表
 const componentMap = {
     input: ElInput,
     select: ElSelect,
@@ -177,7 +167,32 @@ const getComponent = (type: FieldType) => {
     return componentMap[type]
 }
 
-// 获取组件属性
+// 添加渲染组件的方法
+const renderComponent = (field: FormField) => {
+    switch (field.type) {
+        case 'checkbox':
+            return {
+                name: 'CheckboxGroup',
+                render() {
+                    return h(ElCheckboxGroup, {
+                        modelValue: computedFormData.value[field.prop],
+                        'onUpdate:modelValue': (val: any) => {
+                            computedFormData.value[field.prop] = val
+                        }
+                    }, () => field.options?.map(opt =>
+                        h(ElCheckbox, {
+                            key: opt.value,
+                            label: opt.value
+                        }, () => opt.label)
+                    ))
+                }
+            }
+        default:
+            return getComponent(field.type)
+    }
+}
+
+// 修改组件属性配置
 const getComponentProps = (field: FormField) => {
     const commonProps = {
         placeholder: field.placeholder,
@@ -217,6 +232,8 @@ const getComponentProps = (field: FormField) => {
                 type: 'password',
                 showPassword: true
             }
+        case 'checkbox':
+            return commonProps // checkbox 的属性在 renderComponent 中处理
         default:
             return commonProps
     }
@@ -306,6 +323,10 @@ const removeField = (prop: string) => {
 
 // 添加字段选择相关的状态
 const selectedField = ref('')
+const selectedFields = ref<{ [key: string]: string }>({});
+props.fields.forEach(f => {
+    selectedFields.value[f.label] = f.prop;
+})
 
 // 修改显示字段的计算属性
 const displayFields = ref<FormField[]>(Object.assign([], computedFields.value.slice(0, props.maxDisplayFields)));
@@ -336,7 +357,7 @@ const getAvailableOptions = (currentField: FormField) => {
         .map(f => f.prop)
 
     // 返回所有可选字段
-    return props.fields.filter(field => 
+    return props.fields.filter(field =>
         field.prop === currentField.prop || // 当前字段始终可选
         !usedProps.includes(field.prop)     // 未被使用的字段
     )
@@ -345,9 +366,8 @@ const getAvailableOptions = (currentField: FormField) => {
 // 修改字段类型切换处理
 const handleFieldTypeChange = (newProp: string, oldField: FormField) => {
     // 查找新字段配置
-    const newField = props.fields.find(f => f.prop === newProp)
+    const newField = computedFields.value.find(f => f.prop === newProp)
     if (!newField) return
-
     // 查找当前字段位置
     const currentIndex = displayFields.value.findIndex(f => f.prop === oldField.prop)
     if (currentIndex === -1) return
@@ -375,10 +395,10 @@ const handleFieldTypeChange = (newProp: string, oldField: FormField) => {
     }
 
     // 设置新字段的值为 null
-    computedFormData.value[newField.prop] = null
+    // computedFormData.value[newField.prop] = null
 
     // 触发变化事件
-    emit('change', newField.prop, computedFormData.value[newField.prop])
+    // emit('change', newField.prop, computedFormData.value[newField.prop])
 }
 
 // 暴露方法
@@ -399,7 +419,7 @@ const handleAddField = () => {
     // }
 
     // 获取可用字段
-    const availableField = computedFields.value.find(field => 
+    const availableField = computedFields.value.find(field =>
         !displayFields.value.some(f => f.prop === field.prop)
     )
 
@@ -418,6 +438,10 @@ const handleAddField = () => {
     if (!(availableField.prop in formData.value)) {
         formData.value[availableField.prop] = null
     }
+}
+
+const getFields = (label: string) => {
+    return selectedFields.value[label]
 }
 </script>
 
@@ -457,7 +481,7 @@ const handleAddField = () => {
     }
 }
 
-.form-item-select{
+.form-item-select {
     min-width: 80px;
     flex: 1;
 }
