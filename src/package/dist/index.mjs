@@ -1,6 +1,6 @@
-import { defineComponent as J, openBlock as o, createBlock as E, unref as s, withCtx as m, renderSlot as Q, mergeProps as T, ref as h, watch as X, createVNode as _, createElementBlock as g, Fragment as w, renderList as G, resolveDynamicComponent as W, createTextVNode as k, toDisplayString as A, h as ae, createElementVNode as q, computed as K, createCommentVNode as M } from "vue";
-import { ElButton as x, ElInput as V, ElConfigProvider as ce, ElTable as me, ElTableColumn as fe, ElSpace as Z, ElSelect as H, ElDatePicker as ee, ElInputNumber as ue, ElForm as le, ElFormItem as re, ElIcon as oe, ElOption as ne, ElMessage as S, ElSwitch as se, ElRadioGroup as ie, ElCheckboxGroup as pe } from "element-plus";
-const ve = /* @__PURE__ */ J({
+import { defineComponent as z, openBlock as o, createBlock as F, unref as i, withCtx as v, renderSlot as ee, mergeProps as T, ref as h, watch as ue, createVNode as k, createElementBlock as E, Fragment as w, renderList as H, resolveDynamicComponent as Q, createTextVNode as x, toDisplayString as M, h as J, createElementVNode as W, computed as X, createCommentVNode as N } from "vue";
+import { ElButton as V, ElInput as $, ElConfigProvider as ce, ElTable as me, ElTableColumn as ve, ElSpace as te, ElSelect as K, ElDatePicker as ae, ElInputNumber as le, ElForm as oe, ElFormItem as ne, ElIcon as fe, ElOption as se, ElCheckboxGroup as Z, ElCheckbox as ie, ElMessage as A, ElSwitch as pe, ElRadioGroup as de } from "element-plus";
+const Ee = /* @__PURE__ */ z({
   name: "CButton",
   __name: "button",
   props: {
@@ -9,36 +9,36 @@ const ve = /* @__PURE__ */ J({
     disabled: { type: Boolean, default: !1 }
   },
   emits: ["click"],
-  setup(C, { emit: b }) {
-    const F = b;
-    return (n, d) => (o(), E(s(x), {
+  setup(_, { emit: C }) {
+    const g = C;
+    return (n, c) => (o(), F(i(V), {
       type: n.type,
       size: n.size,
       disabled: n.disabled,
-      onClick: d[0] || (d[0] = (f) => F("click", f))
+      onClick: c[0] || (c[0] = (p) => g("click", p))
     }, {
-      default: m(() => [
-        Q(n.$slots, "default")
+      default: v(() => [
+        ee(n.$slots, "default")
       ]),
       _: 3
     }, 8, ["type", "size", "disabled"]));
   }
-}), Ee = /* @__PURE__ */ J({
+}), he = /* @__PURE__ */ z({
   name: "CInput",
   __name: "input",
   props: {
     modelValue: {}
   },
   emits: ["update:modelValue"],
-  setup(C, { emit: b }) {
-    const F = b;
-    return (n, d) => (o(), E(s(V), T({
+  setup(_, { emit: C }) {
+    const g = C;
+    return (n, c) => (o(), F(i($), T({
       "model-value": n.modelValue,
-      "onUpdate:modelValue": d[0] || (d[0] = (f) => F("update:modelValue", f))
+      "onUpdate:modelValue": c[0] || (c[0] = (p) => g("update:modelValue", p))
     }, n.$attrs), null, 16, ["model-value"]));
   }
 });
-var ge = {
+var Fe = {
   name: "zh-cn",
   el: {
     breadcrumb: {
@@ -216,7 +216,7 @@ var ge = {
     }
   }
 };
-const he = ["onClick", "onDblclick"], Fe = /* @__PURE__ */ J({
+const ge = ["onClick", "onDblclick"], be = /* @__PURE__ */ z({
   __name: "table",
   props: {
     data: {},
@@ -225,145 +225,145 @@ const he = ["onClick", "onDblclick"], Fe = /* @__PURE__ */ J({
     trigger: { default: void 0 }
   },
   emits: ["update:data", "save", "field-change"],
-  setup(C, { expose: b, emit: F }) {
-    const n = C, d = F, f = h([]), c = h([]), v = {
-      input: V,
-      select: H,
-      date: ee,
-      number: ue,
-      textarea: V
-    }, U = (e) => v[e || "input"], y = (e) => {
-      const t = {
+  setup(_, { expose: C, emit: g }) {
+    const n = _, c = g, p = h([]), d = h([]), m = {
+      input: $,
+      select: K,
+      date: ae,
+      number: le,
+      textarea: $
+    }, L = (u) => m[u || "input"], b = (u) => {
+      const a = {
         size: "small",
-        placeholder: e.placeholder
+        placeholder: u.placeholder
       };
-      switch (e.type) {
+      switch (u.type) {
         case "select":
           return {
-            ...t,
-            options: e.options
+            ...a,
+            options: u.options
           };
         case "date":
           return {
-            ...t,
+            ...a,
             type: "date",
             valueFormat: "YYYY-MM-DD",
             format: "YYYY-MM-DD"
           };
         case "number":
           return {
-            ...t,
-            min: e.min,
-            max: e.max,
-            step: e.step
+            ...a,
+            min: u.min,
+            max: u.max,
+            step: u.step
           };
         case "textarea":
           return {
-            ...t,
+            ...a,
             type: "textarea",
-            rows: e.rows || 2
+            rows: u.rows || 2
           };
         default:
-          return t;
+          return a;
       }
     };
-    X(() => n.data, (e) => {
-      f.value = e.map((t) => ({
-        ...t,
-        editing: t.editing || !1
-      })), c.value.length || (c.value = JSON.parse(JSON.stringify(e)));
+    ue(() => n.data, (u) => {
+      p.value = u.map((a) => ({
+        ...a,
+        editing: a.editing || !1
+      })), d.value.length || (d.value = JSON.parse(JSON.stringify(u)));
     }, { immediate: !0 });
-    const D = h([]), O = (e, t) => D.value.some(
-      (a) => a.rowIndex === e && a.prop === t
-    ), P = (e, t) => {
-      O(e, t) || (n.editMode === "cell" ? D.value = [{ rowIndex: e, prop: t }] : n.editMode === "row" && (f.value[e].editing = !f.value[e].editing, D.value.push({ rowIndex: e, prop: t })));
-    }, z = (e, t) => {
+    const D = h([]), O = (u, a) => D.value.some(
+      (e) => e.rowIndex === u && e.prop === a
+    ), P = (u, a) => {
+      O(u, a) || (n.editMode === "cell" ? D.value = [{ rowIndex: u, prop: a }] : n.editMode === "row" && (p.value[u].editing = !p.value[u].editing, D.value.push({ rowIndex: u, prop: a })));
+    }, j = (u, a) => {
       D.value = D.value.filter(
-        (a) => !(a.rowIndex === e && a.prop === t)
+        (e) => !(e.rowIndex === u && e.prop === a)
       );
-    }, L = (e, t) => {
-      if (!e.editable)
+    }, I = (u, a) => {
+      if (!u.editable)
         return !1;
-      const a = e.editMode || n.editMode;
-      if (a === "row")
-        return f.value[t].editing;
-      if (a === "cell")
-        return O(t, e.prop);
-    }, j = (e, t) => {
-      n.editMode !== "cell" && n.editMode === "row" && (f.value.forEach((r, i) => {
-        r.editing && i !== e && N(i);
-      }), t.editing = !0, n.columns.filter((r) => r.editable).forEach((r) => {
-        P(e, r.prop);
+      const e = u.editMode || n.editMode;
+      if (e === "row")
+        return p.value[a].editing;
+      if (e === "cell")
+        return O(a, u.prop);
+    }, G = (u, a) => {
+      n.editMode !== "cell" && n.editMode === "row" && (p.value.forEach((t, r) => {
+        t.editing && r !== u && Y(r);
+      }), a.editing = !0, n.columns.filter((t) => t.editable).forEach((t) => {
+        P(u, t.prop);
       }));
-    }, N = (e) => {
-      const t = f.value[e];
-      t.editing = !1, D.value = D.value.filter((a) => a.rowIndex !== e), d("save", e, t), d("update:data", f.value.map(({ editing: a, ...r }) => r));
-    }, $ = (e, t) => {
-      O(e, t) && (n.editMode === "cell" && z(e, t), D.value.some((r) => r.rowIndex === e) || setTimeout(() => {
-        f.value[e].editing && N(e);
+    }, Y = (u) => {
+      const a = p.value[u];
+      a.editing = !1, D.value = D.value.filter((e) => e.rowIndex !== u), c("save", u, a), c("update:data", p.value.map(({ editing: e, ...t }) => t));
+    }, R = (u, a) => {
+      O(u, a) && (n.editMode === "cell" && j(u, a), D.value.some((t) => t.rowIndex === u) || setTimeout(() => {
+        p.value[u].editing && Y(u);
       }, 200));
-    }, B = h(/* @__PURE__ */ new Map()), p = (e, t, a) => {
-      a && B.value.set(`${e}-${t}`, a);
-    }, Y = (e, t, a, r) => {
-      (a.trigger || n.trigger) === r && (P(e, t), setTimeout(() => {
-        const R = B.value.get(`${e}-${t}`);
-        R && (R.focus ? R.focus() : R.$el && R.$el.querySelector("input") && R.$el.querySelector("input").focus());
+    }, S = h(/* @__PURE__ */ new Map()), B = (u, a, e) => {
+      e && S.value.set(`${u}-${a}`, e);
+    }, y = (u, a, e, t) => {
+      (e.trigger || n.trigger) === t && (P(u, a), setTimeout(() => {
+        const s = S.value.get(`${u}-${a}`);
+        s && (s.focus ? s.focus() : s.$el && s.$el.querySelector("input") && s.$el.querySelector("input").focus());
       }));
-    }, I = (e, t, a) => {
-      const r = n.columns.find((i) => i.prop === t);
-      r != null && r.onChange && r.onChange(a, f.value[e]), d("field-change", e, t, a);
-    }, l = (e, t, a) => e.show === !1 ? null : ae(x, {
-      type: e.type || "default",
+    }, f = (u, a, e) => {
+      const t = n.columns.find((r) => r.prop === a);
+      t != null && t.onChange && t.onChange(e, p.value[u]), c("field-change", u, a, e);
+    }, q = (u, a, e) => u.show === !1 ? null : J(V, {
+      type: u.type || "default",
       link: !0,
-      onClick: () => e.handler(t, a)
-    }, () => e.text);
-    return b({
-      handleEdit: j,
-      renderButtonGroup: (e, t, a) => {
-        const r = e.buttons.filter((i) => i.show !== !1).map((i) => l(i, t, a)).filter(Boolean);
-        return e.space !== !1 ? ae(Z, {}, () => r) : r;
+      onClick: () => u.handler(a, e)
+    }, () => u.text);
+    return C({
+      handleEdit: G,
+      renderButtonGroup: (u, a, e) => {
+        const t = u.buttons.filter((r) => r.show !== !1).map((r) => q(r, a, e)).filter(Boolean);
+        return u.space !== !1 ? J(te, {}, () => t) : t;
       }
-    }), (e, t) => (o(), E(s(ce), { locale: s(ge) }, {
-      default: m(() => [
-        _(s(me), T({ data: f.value }, e.$attrs), {
-          default: m(() => [
-            (o(!0), g(w, null, G(e.columns, (a) => (o(), E(s(fe), T({
-              key: a.prop,
+    }), (u, a) => (o(), F(i(ce), { locale: i(Fe) }, {
+      default: v(() => [
+        k(i(me), T({ data: p.value }, u.$attrs), {
+          default: v(() => [
+            (o(!0), E(w, null, H(u.columns, (e) => (o(), F(i(ve), T({
+              key: e.prop,
               ref_for: !0
-            }, a), {
-              default: m((r) => [
-                a.editable ? (o(), g("div", {
+            }, e), {
+              default: v((t) => [
+                e.editable ? (o(), E("div", {
                   key: 0,
-                  onClick: (i) => Y(r.$index, a.prop, a, "click"),
-                  onDblclick: (i) => Y(r.$index, a.prop, a, "dblclick")
+                  onClick: (r) => y(t.$index, e.prop, e, "click"),
+                  onDblclick: (r) => y(t.$index, e.prop, e, "dblclick")
                 }, [
-                  L(a, r.$index) ? (o(), E(W(U(a.type)), T({
+                  I(e, t.$index) ? (o(), F(Q(L(e.type)), T({
                     key: 0,
-                    modelValue: r.row[a.prop],
-                    "onUpdate:modelValue": (i) => r.row[a.prop] = i,
+                    modelValue: t.row[e.prop],
+                    "onUpdate:modelValue": (r) => t.row[e.prop] = r,
                     ref_for: !0
-                  }, y(a), {
+                  }, b(e), {
                     ref_for: !0,
-                    ref: (i) => p(r.$index, a.prop, i),
-                    onChange: (i) => I(r.$index, a.prop, i),
-                    onBlur: (i) => $(r.$index, a.prop)
-                  }), null, 16, ["modelValue", "onUpdate:modelValue", "onChange", "onBlur"])) : (o(), g(w, { key: 1 }, [
-                    a.formatter ? (o(), g(w, { key: 0 }, [
-                      k(A(a.formatter(r.row[a.prop], r.row)), 1)
-                    ], 64)) : (o(), g(w, { key: 1 }, [
-                      k(A(r.row[a.prop]), 1)
+                    ref: (r) => B(t.$index, e.prop, r),
+                    onChange: (r) => f(t.$index, e.prop, r),
+                    onBlur: (r) => R(t.$index, e.prop)
+                  }), null, 16, ["modelValue", "onUpdate:modelValue", "onChange", "onBlur"])) : (o(), E(w, { key: 1 }, [
+                    e.formatter ? (o(), E(w, { key: 0 }, [
+                      x(M(e.formatter(t.row[e.prop], t.row)), 1)
+                    ], 64)) : (o(), E(w, { key: 1 }, [
+                      x(M(t.row[e.prop]), 1)
                     ], 64))
                   ], 64))
-                ], 40, he)) : a.render ? (o(), E(W(a.render({
-                  row: r.row,
-                  $index: r.$index,
-                  column: a,
-                  editing: r.row.editing
-                })), { key: 1 })) : (o(), g(w, { key: 2 }, [
-                  a.formatter ? (o(), g(w, { key: 0 }, [
-                    k(A(a.formatter(r.row[a.prop], r.row)), 1)
-                  ], 64)) : (o(), g(w, { key: 1 }, [
-                    k(A(r.row[a.prop]), 1)
+                ], 40, ge)) : e.render ? (o(), F(Q(e.render({
+                  row: t.row,
+                  $index: t.$index,
+                  column: e,
+                  editing: t.row.editing
+                })), { key: 1 })) : (o(), E(w, { key: 2 }, [
+                  e.formatter ? (o(), E(w, { key: 0 }, [
+                    x(M(e.formatter(t.row[e.prop], t.row)), 1)
+                  ], 64)) : (o(), E(w, { key: 1 }, [
+                    x(M(t.row[e.prop]), 1)
                   ], 64))
                 ], 64))
               ]),
@@ -377,32 +377,32 @@ const he = ["onClick", "onDblclick"], Fe = /* @__PURE__ */ J({
     }, 8, ["locale"]));
   }
 });
-const te = (C, b) => {
-  const F = C.__vccOpts || C;
-  for (const [n, d] of b)
-    F[n] = d;
-  return F;
-}, be = /* @__PURE__ */ te(Fe, [["__scopeId", "data-v-c24213c4"]]);
+const re = (_, C) => {
+  const g = _.__vccOpts || _;
+  for (const [n, c] of C)
+    g[n] = c;
+  return g;
+}, Ce = /* @__PURE__ */ re(be, [["__scopeId", "data-v-c24213c4"]]);
 /*! Element Plus Icons Vue v2.3.1 */
-var Ce = /* @__PURE__ */ J({
+var ye = /* @__PURE__ */ z({
   name: "CircleCloseFilled",
   __name: "circle-close-filled",
-  setup(C) {
-    return (b, F) => (o(), g("svg", {
+  setup(_) {
+    return (C, g) => (o(), E("svg", {
       xmlns: "http://www.w3.org/2000/svg",
       viewBox: "0 0 1024 1024"
     }, [
-      q("path", {
+      W("path", {
         fill: "currentColor",
         d: "M512 64a448 448 0 1 1 0 896 448 448 0 0 1 0-896m0 393.664L407.936 353.6a38.4 38.4 0 1 0-54.336 54.336L457.664 512 353.6 616.064a38.4 38.4 0 1 0 54.336 54.336L512 566.336 616.064 670.4a38.4 38.4 0 1 0 54.336-54.336L566.336 512 670.4 407.936a38.4 38.4 0 1 0-54.336-54.336z"
       })
     ]));
   }
-}), de = Ce;
-const ye = { class: "form-content" }, _e = { class: "form-item-content" }, De = {
+}), _e = ye;
+const De = { class: "form-content" }, Be = { class: "form-item-content" }, we = {
   key: 0,
   class: "form-buttons"
-}, Be = /* @__PURE__ */ J({
+}, ke = /* @__PURE__ */ z({
   __name: "form",
   props: {
     fields: { default: () => [] },
@@ -418,28 +418,53 @@ const ye = { class: "form-content" }, _e = { class: "form-item-content" }, De = 
     maxDisplayFields: { default: 3 }
   },
   emits: ["update:modelValue", "submit", "reset", "change"],
-  setup(C, { expose: b, emit: F }) {
-    const n = C, d = F, f = h(Object.assign([], n.fields)), c = h(), v = h({}), U = h({}), y = K({
-      get: () => v.value,
+  setup(_, { expose: C, emit: g }) {
+    const n = _, c = g, p = h(Object.assign([], n.fields)), d = h(), m = h({}), L = h({}), b = X({
+      get: () => m.value,
       set: (l) => {
-        const u = JSON.stringify(v.value), e = JSON.stringify(l);
-        u !== e && (v.value = JSON.parse(e), d("update:modelValue", l));
+        const u = JSON.stringify(m.value), a = JSON.stringify(l);
+        u !== a && (m.value = JSON.parse(a), c("update:modelValue", l));
       }
     });
-    X(() => n.modelValue, (l) => {
-      v.value = JSON.parse(JSON.stringify(l));
+    ue(() => n.modelValue, (l) => {
+      m.value = JSON.parse(JSON.stringify(l));
     }, { immediate: !0 });
     const D = {
-      input: V,
-      select: H,
-      date: ee,
-      number: ue,
-      switch: se,
-      radio: ie,
-      checkbox: pe,
-      textarea: V,
-      password: V
+      input: $,
+      select: K,
+      date: ae,
+      number: le,
+      switch: pe,
+      radio: de,
+      checkbox: Z,
+      textarea: $,
+      password: $
     }, O = (l) => D[l], P = (l) => {
+      switch (l.type) {
+        case "checkbox":
+          return {
+            name: "CheckboxGroup",
+            render() {
+              return J(Z, {
+                modelValue: b.value[l.prop],
+                "onUpdate:modelValue": (u) => {
+                  b.value[l.prop] = u;
+                }
+              }, () => {
+                var u;
+                return (u = l.options) == null ? void 0 : u.map(
+                  (a) => J(ie, {
+                    key: a.value,
+                    label: a.value
+                  }, () => a.label)
+                );
+              });
+            }
+          };
+        default:
+          return O(l.type);
+      }
+    }, j = (l) => {
       const u = {
         placeholder: l.placeholder,
         disabled: l.disabled,
@@ -477,161 +502,166 @@ const ye = { class: "form-content" }, _e = { class: "form-item-content" }, De = 
             type: "password",
             showPassword: !0
           };
+        case "checkbox":
+          return {
+            ...u,
+            options: l.options
+          };
         default:
           return u;
       }
-    }, z = (l, u) => {
-      const e = n.fields.find((t) => t.prop === l);
-      e != null && e.onChange && e.onChange(u), d("change", l, u);
-    }, L = async () => {
-      if (c.value)
+    }, I = (l, u) => {
+      const a = n.fields.find((e) => e.prop === l);
+      a != null && a.onChange && a.onChange(u), c("change", l, u);
+    }, G = async () => {
+      if (d.value)
         try {
-          await c.value.validate(), d("submit", v.value);
+          await d.value.validate(), c("submit", m.value);
         } catch (l) {
           console.error("表单验证失败:", l);
         }
-    }, j = () => {
-      c.value && c.value.resetFields(), d("reset");
-    }, N = (l) => !l.prop || !l.label || !l.type ? (S.error("字段配置不完整"), !1) : p.value.some((u) => u.prop === l.prop) ? (S.warning(`字段 "${l.label}" 已存在`), !1) : (p.value = [...p.value, l], l.prop in v.value || (v.value[l.prop] = null), S.success(`添加字段 "${l.label}" 成功`), !0), $ = (l) => {
-      const u = p.value.findIndex((e) => e.prop === l);
-      return u > -1 ? (p.value.splice(u, 1), delete v.value[l], !0) : !1;
-    }, B = h(""), p = h(Object.assign([], f.value.slice(0, n.maxDisplayFields))), Y = K(
-      () => f.value.filter(
-        (l) => !p.value.some((u) => u.prop === l.prop)
+    }, Y = () => {
+      d.value && d.value.resetFields(), c("reset");
+    }, R = (l) => !l.prop || !l.label || !l.type ? (A.error("字段配置不完整"), !1) : y.value.some((u) => u.prop === l.prop) ? (A.warning(`字段 "${l.label}" 已存在`), !1) : (y.value = [...y.value, l], l.prop in m.value || (m.value[l.prop] = null), A.success(`添加字段 "${l.label}" 成功`), !0), S = (l) => {
+      const u = y.value.findIndex((a) => a.prop === l);
+      return u > -1 ? (y.value.splice(u, 1), delete m.value[l], !0) : !1;
+    }, B = h(""), y = h(Object.assign([], p.value.slice(0, n.maxDisplayFields))), f = X(
+      () => p.value.filter(
+        (l) => !y.value.some((u) => u.prop === l.prop)
       )
-    ), I = () => {
+    ), q = () => {
       if (!B.value)
         return;
       const l = n.fields.find((u) => u.prop === B.value);
-      l && (N(l), B.value = "");
+      l && (R(l), B.value = "");
     };
-    return b({
-      formRef: c,
+    return C({
+      formRef: d,
       validate: () => {
         var l;
-        return (l = c.value) == null ? void 0 : l.validate();
+        return (l = d.value) == null ? void 0 : l.validate();
       },
       resetFields: () => {
         var l;
-        return (l = c.value) == null ? void 0 : l.resetFields();
+        return (l = d.value) == null ? void 0 : l.resetFields();
       },
       clearValidate: (l) => {
         var u;
-        return (u = c.value) == null ? void 0 : u.clearValidate(l);
+        return (u = d.value) == null ? void 0 : u.clearValidate(l);
       },
-      addField: N,
-      removeField: $
-    }), (l, u) => (o(), g("div", null, [
-      _(s(le), T({
+      addField: R,
+      removeField: S
+    }), (l, u) => (o(), E("div", null, [
+      k(i(oe), T({
         ref_key: "formRef",
-        ref: c,
-        model: y.value,
-        rules: U.value
+        ref: d,
+        model: b.value,
+        rules: L.value
       }, l.$attrs, {
         inline: "",
         class: "horizontal-form"
       }), {
-        default: m(() => [
-          q("div", ye, [
-            (o(!0), g(w, null, G(p.value, (e) => (o(), E(s(re), {
-              key: e.prop,
-              label: e.label,
-              prop: e.prop,
-              rules: e.rules,
+        default: v(() => [
+          W("div", De, [
+            (o(!0), E(w, null, H(y.value, (a) => (o(), F(i(ne), {
+              key: a.prop,
+              label: a.label,
+              prop: a.prop,
+              rules: a.rules,
               class: "form-item"
             }, {
-              default: m(() => [
-                q("div", _e, [
-                  (o(), E(W(O(e.type)), T({
-                    modelValue: y.value[e.prop],
-                    "onUpdate:modelValue": (t) => y.value[e.prop] = t,
+              default: v(() => [
+                W("div", Be, [
+                  (o(), F(Q(P(a)), T({
+                    modelValue: b.value[a.prop],
+                    "onUpdate:modelValue": (e) => b.value[a.prop] = e,
                     ref_for: !0
-                  }, P(e), {
-                    onChange: (t) => z(e.prop, t)
+                  }, j(a), {
+                    onChange: (e) => I(a.prop, e)
                   }), null, 16, ["modelValue", "onUpdate:modelValue", "onChange"])),
-                  e.removable !== !1 ? (o(), E(s(x), {
+                  a.removable !== !1 ? (o(), F(i(V), {
                     key: 0,
                     type: "danger",
                     link: "",
-                    onClick: (t) => $(e.prop)
+                    onClick: (e) => S(a.prop)
                   }, {
-                    default: m(() => [
-                      _(s(oe), null, {
-                        default: m(() => [
-                          _(s(de))
+                    default: v(() => [
+                      k(i(fe), null, {
+                        default: v(() => [
+                          k(i(_e))
                         ]),
                         _: 1
                       })
                     ]),
                     _: 2
-                  }, 1032, ["onClick"])) : M("", !0)
+                  }, 1032, ["onClick"])) : N("", !0)
                 ])
               ]),
               _: 2
             }, 1032, ["label", "prop", "rules"]))), 128)),
-            _(s(Z), null, {
-              default: m(() => [
-                _(s(H), {
+            k(i(te), null, {
+              default: v(() => [
+                k(i(K), {
                   modelValue: B.value,
-                  "onUpdate:modelValue": u[0] || (u[0] = (e) => B.value = e),
+                  "onUpdate:modelValue": u[0] || (u[0] = (a) => B.value = a),
                   placeholder: "选择已有字段",
                   style: { width: "200px" }
                 }, {
-                  default: m(() => [
-                    (o(!0), g(w, null, G(Y.value, (e) => (o(), E(s(ne), {
-                      key: e.prop,
-                      label: e.label,
-                      value: e.prop
+                  default: v(() => [
+                    (o(!0), E(w, null, H(f.value, (a) => (o(), F(i(se), {
+                      key: a.prop,
+                      label: a.label,
+                      value: a.prop
                     }, null, 8, ["label", "value"]))), 128))
                   ]),
                   _: 1
                 }, 8, ["modelValue"]),
-                _(s(x), {
-                  onClick: I,
+                k(i(V), {
+                  onClick: q,
                   type: "success",
                   disabled: !B.value
                 }, {
-                  default: m(() => u[1] || (u[1] = [
-                    k(" 添加条件 ")
+                  default: v(() => u[1] || (u[1] = [
+                    x(" 添加条件 ")
                   ])),
                   _: 1
                 }, 8, ["disabled"]),
-                l.showSubmit ? (o(), E(s(x), {
+                l.showSubmit ? (o(), F(i(V), {
                   key: 0,
                   type: "primary",
-                  onClick: L,
+                  onClick: G,
                   loading: l.loading
                 }, {
-                  default: m(() => [
-                    k(A(l.submitText), 1)
+                  default: v(() => [
+                    x(M(l.submitText), 1)
                   ]),
                   _: 1
-                }, 8, ["loading"])) : M("", !0),
-                l.showReset ? (o(), E(s(x), {
+                }, 8, ["loading"])) : N("", !0),
+                l.showReset ? (o(), F(i(V), {
                   key: 1,
-                  onClick: j
+                  onClick: Y
                 }, {
-                  default: m(() => [
-                    k(A(l.resetText), 1)
+                  default: v(() => [
+                    x(M(l.resetText), 1)
                   ]),
                   _: 1
-                })) : M("", !0),
-                Q(l.$slots, "buttons", {}, void 0, !0)
+                })) : N("", !0),
+                ee(l.$slots, "buttons", {}, void 0, !0)
               ]),
               _: 3
             })
           ]),
-          l.showButtons ? (o(), g("div", De)) : M("", !0)
+          l.showButtons ? (o(), E("div", we)) : N("", !0)
         ]),
         _: 3
       }, 16, ["model", "rules"])
     ]));
   }
 });
-const we = /* @__PURE__ */ te(Be, [["__scopeId", "data-v-4e702f17"]]), ke = { class: "form-content" }, xe = { class: "form-item-content" }, Ve = {
+const xe = /* @__PURE__ */ re(ke, [["__scopeId", "data-v-0903b37c"]]), Ve = { class: "form-content" }, $e = { class: "form-item-content" }, Se = {
   key: 0,
   class: "form-buttons"
-}, $e = /* @__PURE__ */ J({
+}, Ae = /* @__PURE__ */ z({
   __name: "search",
   props: {
     fields: { default: () => [] },
@@ -647,271 +677,286 @@ const we = /* @__PURE__ */ te(Be, [["__scopeId", "data-v-4e702f17"]]), ke = { cl
     maxDisplayFields: { default: 3 }
   },
   emits: ["update:modelValue", "submit", "reset", "change"],
-  setup(C, { expose: b, emit: F }) {
-    const n = C, d = F, f = h(Object.assign([], n.fields)), c = h(), v = h({}), U = h({}), y = K({
-      get: () => v.value,
-      set: (u) => {
-        const e = JSON.stringify(v.value), t = JSON.stringify(u);
-        e !== t && (v.value = JSON.parse(t), d("update:modelValue", u));
+  setup(_, { expose: C, emit: g }) {
+    const n = _, c = g, p = h(Object.assign([], n.fields)), d = h(), m = h({}), L = h({}), b = X({
+      get: () => m.value,
+      set: (e) => {
+        const t = JSON.stringify(m.value), r = JSON.stringify(e);
+        t !== r && (m.value = JSON.parse(r), c("update:modelValue", e));
       }
     });
-    X(() => n.modelValue, (u) => {
-      v.value = JSON.parse(JSON.stringify(u));
+    ue(() => n.modelValue, (e) => {
+      m.value = JSON.parse(JSON.stringify(e));
     }, { immediate: !0 });
     const D = {
-      input: V,
-      select: H,
-      date: ee,
-      number: ue,
-      switch: se,
-      radio: ie,
-      checkbox: pe,
-      textarea: V,
-      password: V
-    }, O = (u) => D[u], P = (u) => {
-      const e = {
-        placeholder: u.placeholder,
-        disabled: u.disabled,
-        clearable: u.clearable
+      input: $,
+      select: K,
+      date: ae,
+      number: le,
+      switch: pe,
+      radio: de,
+      checkbox: Z,
+      textarea: $,
+      password: $
+    }, O = (e) => D[e], P = (e) => {
+      switch (e.type) {
+        case "checkbox":
+          return {
+            name: "CheckboxGroup",
+            render() {
+              return J(Z, {
+                modelValue: b.value[e.prop],
+                "onUpdate:modelValue": (t) => {
+                  b.value[e.prop] = t;
+                }
+              }, () => {
+                var t;
+                return (t = e.options) == null ? void 0 : t.map(
+                  (r) => J(ie, {
+                    key: r.value,
+                    label: r.value
+                  }, () => r.label)
+                );
+              });
+            }
+          };
+        default:
+          return O(e.type);
+      }
+    }, j = (e) => {
+      const t = {
+        placeholder: e.placeholder,
+        disabled: e.disabled,
+        clearable: e.clearable
       };
-      switch (u.type) {
+      switch (e.type) {
         case "select":
           return {
-            ...e,
-            options: u.options,
-            multiple: u.multiple
+            ...t,
+            options: e.options,
+            multiple: e.multiple
           };
         case "date":
           return {
-            ...e,
+            ...t,
             type: "date",
             valueFormat: "YYYY-MM-DD"
           };
         case "number":
           return {
-            ...e,
-            min: u.min,
-            max: u.max,
-            step: u.step
+            ...t,
+            min: e.min,
+            max: e.max,
+            step: e.step
           };
         case "textarea":
           return {
-            ...e,
+            ...t,
             type: "textarea",
-            rows: u.rows || 2
+            rows: e.rows || 2
           };
         case "password":
           return {
-            ...e,
+            ...t,
             type: "password",
             showPassword: !0
           };
+        case "checkbox":
+          return t;
         default:
-          return e;
+          return t;
       }
-    }, z = (u, e) => {
-      const t = n.fields.find((a) => a.prop === B.value);
-      t != null && t.onChange && t.onChange(e), d("change", B.value, e);
-    }, L = async () => {
-      if (c.value)
+    }, I = (e, t) => {
+      const r = n.fields.find((s) => s.prop === B.value);
+      r != null && r.onChange && r.onChange(t), c("change", B.value, t);
+    }, G = async () => {
+      if (d.value)
         try {
-          await c.value.validate(), d("submit", v.value);
-        } catch (u) {
-          console.error("表单验证失败:", u);
+          await d.value.validate(), c("submit", m.value);
+        } catch (e) {
+          console.error("表单验证失败:", e);
         }
-    }, j = () => {
-      c.value && c.value.resetFields(), d("reset");
-    }, N = (u) => !u.prop || !u.label || !u.type ? (S.error("字段配置不完整"), !1) : p.value.some((e) => e.prop === u.prop) ? (S.warning(`字段 "${u.label}" 已存在`), !1) : (p.value = [...p.value, u], u.prop in v.value || (v.value[u.prop] = null), S.success(`添加字段 "${u.label}" 成功`), !0), $ = (u) => {
-      const e = p.value.findIndex((t) => t.prop === u);
-      return e > -1 ? (p.value.splice(e, 1), delete v.value[u], !0) : !1;
-    }, B = h(""), p = h(Object.assign([], f.value.slice(0, n.maxDisplayFields)));
-    K(
-      () => f.value.filter(
-        (u) => !p.value.some((e) => e.prop === u.prop)
+    }, Y = () => {
+      d.value && d.value.resetFields(), c("reset");
+    }, R = (e) => !e.prop || !e.label || !e.type ? (A.error("字段配置不完整"), !1) : f.value.some((t) => t.prop === e.prop) ? (A.warning(`字段 "${e.label}" 已存在`), !1) : (f.value = [...f.value, e], e.prop in m.value || (m.value[e.prop] = null), A.success(`添加字段 "${e.label}" 成功`), !0), S = (e) => {
+      const t = f.value.findIndex((r) => r.prop === e);
+      return t > -1 ? (f.value.splice(t, 1), delete m.value[e], !0) : !1;
+    }, B = h(""), y = h({});
+    n.fields.forEach((e) => {
+      y.value[e.label] = e.prop;
+    });
+    const f = h(Object.assign([], p.value.slice(0, n.maxDisplayFields)));
+    X(
+      () => p.value.filter(
+        (e) => !f.value.some((t) => t.prop === e.prop)
       )
     );
-    const Y = (u) => {
-      const e = p.value.filter((t) => t.prop !== u.prop).map((t) => t.prop);
+    const q = (e) => {
+      const t = f.value.filter((r) => r.prop !== e.prop).map((r) => r.prop);
       return n.fields.filter(
-        (t) => t.prop === u.prop || // 当前字段始终可选
-        !e.includes(t.prop)
+        (r) => r.prop === e.prop || // 当前字段始终可选
+        !t.includes(r.prop)
         // 未被使用的字段
       );
-    }, I = (u, e) => {
-      const t = n.fields.find((i) => i.prop === u);
-      if (!t)
+    }, l = (e, t) => {
+      const r = p.value.find((U) => U.prop === e);
+      if (!r)
         return;
-      const a = p.value.findIndex((i) => i.prop === e.prop);
-      if (a === -1)
+      const s = f.value.findIndex((U) => U.prop === t.prop);
+      if (s === -1)
         return;
-      if (p.value.some(
-        (i) => i.prop === u && i.prop !== e.prop
+      if (f.value.some(
+        (U) => U.prop === e && U.prop !== t.prop
       )) {
-        S.warning("该字段已存在"), p.value[a] = { ...e };
+        A.warning("该字段已存在"), f.value[s] = { ...t };
         return;
       }
-      y.value[e.prop], delete y.value[e.prop], p.value[a] = {
-        ...t,
-        removable: e.removable
-      }, y.value[t.prop] = null, d("change", t.prop, y.value[t.prop]);
+      b.value[t.prop], delete b.value[t.prop], f.value[s] = {
+        ...r,
+        removable: t.removable
+      };
     };
-    b({
-      formRef: c,
+    C({
+      formRef: d,
       validate: () => {
-        var u;
-        return (u = c.value) == null ? void 0 : u.validate();
+        var e;
+        return (e = d.value) == null ? void 0 : e.validate();
       },
       resetFields: () => {
-        var u;
-        return (u = c.value) == null ? void 0 : u.resetFields();
-      },
-      clearValidate: (u) => {
         var e;
-        return (e = c.value) == null ? void 0 : e.clearValidate(u);
+        return (e = d.value) == null ? void 0 : e.resetFields();
       },
-      addField: N,
-      removeField: $
+      clearValidate: (e) => {
+        var t;
+        return (t = d.value) == null ? void 0 : t.clearValidate(e);
+      },
+      addField: R,
+      removeField: S
     });
-    const l = () => {
-      const u = f.value.find(
-        (e) => !p.value.some((t) => t.prop === e.prop)
+    const u = () => {
+      const e = p.value.find(
+        (t) => !f.value.some((r) => r.prop === t.prop)
       );
-      if (!u) {
-        S.warning("没有更多可用的搜索条件");
+      if (!e) {
+        A.warning("没有更多可用的搜索条件");
         return;
       }
-      p.value.push({
-        ...u,
+      f.value.push({
+        ...e,
         removable: !0
-      }), u.prop in v.value || (v.value[u.prop] = null);
-    };
-    return (u, e) => (o(), g("div", null, [
-      _(s(le), T({
+      }), e.prop in m.value || (m.value[e.prop] = null);
+    }, a = (e) => y.value[e];
+    return (e, t) => (o(), E("div", null, [
+      k(i(oe), T({
         ref_key: "formRef",
-        ref: c,
-        model: y.value,
-        rules: U.value
-      }, u.$attrs, {
+        ref: d,
+        model: b.value,
+        rules: L.value
+      }, e.$attrs, {
         inline: "",
         class: "horizontal-form"
       }), {
-        default: m(() => [
-          q("div", ke, [
-            (o(!0), g(w, null, G(p.value, (t) => (o(), E(s(re), {
-              key: t.prop,
-              prop: t.prop,
-              rules: t.rules,
+        default: v(() => [
+          W("div", Ve, [
+            (o(!0), E(w, null, H(f.value, (r) => (o(), F(i(ne), {
+              key: r.prop,
+              prop: r.prop,
+              rules: r.rules,
               class: "form-item"
             }, {
-              default: m(() => [
-                q("div", xe, [
-                  _(s(H), {
-                    modelValue: t.prop,
-                    "onUpdate:modelValue": (a) => t.prop = a,
+              default: v(() => [
+                W("div", $e, [
+                  k(i(K), {
+                    "model-value": y.value[r.label],
+                    "onUpdate:modelValue": (s) => a(r.label),
                     clearable: "",
                     class: "form-item-select",
-                    onClear: (a) => $(t.prop),
-                    onChange: (a) => I(a, t)
+                    onClear: (s) => S(r.prop),
+                    onChange: (s) => l(s, r)
                   }, {
-                    default: m(() => [
-                      (o(!0), g(w, null, G(Y(t), (a) => (o(), E(s(ne), {
-                        key: a.prop,
-                        value: a.prop,
-                        label: a.label,
-                        disabled: a.disabled
+                    default: v(() => [
+                      (o(!0), E(w, null, H(q(r), (s) => (o(), F(i(se), {
+                        key: s.prop,
+                        value: s.prop,
+                        label: s.label,
+                        disabled: s.disabled
                       }, null, 8, ["value", "label", "disabled"]))), 128))
                     ]),
                     _: 2
-                  }, 1032, ["modelValue", "onUpdate:modelValue", "onClear", "onChange"]),
-                  (o(), E(W(O(t.type)), T({
-                    modelValue: y.value[t.prop],
-                    "onUpdate:modelValue": (a) => y.value[t.prop] = a,
+                  }, 1032, ["model-value", "onUpdate:modelValue", "onClear", "onChange"]),
+                  (o(), F(Q(P(r)), T({
+                    modelValue: b.value[r.prop],
+                    "onUpdate:modelValue": (s) => b.value[r.prop] = s,
                     ref_for: !0
-                  }, P(t), {
-                    onChange: (a) => z(t.prop, a)
-                  }), null, 16, ["modelValue", "onUpdate:modelValue", "onChange"])),
-                  t.removable !== !1 ? (o(), E(s(x), {
-                    key: 0,
-                    type: "danger",
-                    link: "",
-                    onClick: (a) => $(t.prop)
-                  }, {
-                    default: m(() => [
-                      _(s(oe), null, {
-                        default: m(() => [
-                          _(s(de))
-                        ]),
-                        _: 1
-                      })
-                    ]),
-                    _: 2
-                  }, 1032, ["onClick"])) : M("", !0)
+                  }, j(r), {
+                    onChange: (s) => I(r.prop, s)
+                  }), null, 16, ["modelValue", "onUpdate:modelValue", "onChange"]))
                 ])
               ]),
               _: 2
             }, 1032, ["prop", "rules"]))), 128)),
-            _(s(Z), null, {
-              default: m(() => [
-                _(s(x), {
-                  onClick: l,
+            k(i(te), null, {
+              default: v(() => [
+                k(i(V), {
+                  onClick: u,
                   type: "success"
                 }, {
-                  default: m(() => e[0] || (e[0] = [
-                    k(" 添加条件 ")
+                  default: v(() => t[0] || (t[0] = [
+                    x(" 添加条件 ")
                   ])),
                   _: 1
                 }),
-                u.showSubmit ? (o(), E(s(x), {
+                e.showSubmit ? (o(), F(i(V), {
                   key: 0,
                   type: "primary",
-                  onClick: L,
-                  loading: u.loading
+                  onClick: G,
+                  loading: e.loading
                 }, {
-                  default: m(() => [
-                    k(A(u.submitText), 1)
+                  default: v(() => [
+                    x(M(e.submitText), 1)
                   ]),
                   _: 1
-                }, 8, ["loading"])) : M("", !0),
-                u.showReset ? (o(), E(s(x), {
+                }, 8, ["loading"])) : N("", !0),
+                e.showReset ? (o(), F(i(V), {
                   key: 1,
-                  onClick: j
+                  onClick: Y
                 }, {
-                  default: m(() => [
-                    k(A(u.resetText), 1)
+                  default: v(() => [
+                    x(M(e.resetText), 1)
                   ]),
                   _: 1
-                })) : M("", !0),
-                Q(u.$slots, "buttons", {}, void 0, !0)
+                })) : N("", !0),
+                ee(e.$slots, "buttons", {}, void 0, !0)
               ]),
               _: 3
             })
           ]),
-          u.showButtons ? (o(), g("div", Ve)) : M("", !0)
+          e.showButtons ? (o(), E("div", Se)) : N("", !0)
         ]),
         _: 3
       }, 16, ["model", "rules"])
     ]));
   }
 });
-const Se = /* @__PURE__ */ te($e, [["__scopeId", "data-v-def6c8c1"]]);
-const Ae = {
-  CButton: ve,
-  CInput: Ee,
-  CTable: be,
-  CForm: we,
-  CSearch: Se
-}, Oe = {
-  install(C) {
-    Object.entries(Ae).forEach(([b, F]) => {
-      C.component(b, F);
+const Me = /* @__PURE__ */ re(Ae, [["__scopeId", "data-v-6dae4f61"]]);
+const Te = {
+  CButton: Ee,
+  CInput: he,
+  CTable: Ce,
+  CForm: xe,
+  CSearch: Me
+}, Ye = {
+  install(_) {
+    Object.entries(Te).forEach(([C, g]) => {
+      _.component(C, g);
     });
   }
 };
 export {
-  ve as CButton,
-  we as CForm,
-  Ee as CInput,
-  Se as CSearch,
-  be as CTable,
-  Oe as default
+  Ee as CButton,
+  xe as CForm,
+  he as CInput,
+  Me as CSearch,
+  Ce as CTable,
+  Ye as default
 };
