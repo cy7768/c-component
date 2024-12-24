@@ -82,11 +82,20 @@
         </div>
       </div>
       <div class="test-item">
-        <h2>砌体布局-columns-visibility</h2>
         <div class="grid-container">
           <div v-for="fit in fits" :key="fit" class="block">
-            <el-image :src="url" :fit="fit" />
-          </div>
+          <el-image  :src="url" :fit="fit" />
+         </div>
+          <!-- <el-row>
+            <el-col :span="24">内容1</el-col>
+          </el-row>
+
+          <el-row>
+            <el-col :span="24">内容2</el-col>
+          </el-row>
+          <el-row>
+            <el-col :span="24">内容3</el-col>
+          </el-row> -->
         </div>
 
 
@@ -441,12 +450,13 @@ const handleFormChange = (prop: string, value: any) => {
 
   /* column-count: 3; */
   columns: 300px 3
-    /* display: grid;
+  
+  /* display: grid;
   grid-template-columns: 10% 59% 30%;
   flex-wrap: wrap;
   gap: 1%; */
 
-    /* el-row {
+  /* el-row {
     width: 100%;
     border: 1px solid #d12e2e;
   } */
