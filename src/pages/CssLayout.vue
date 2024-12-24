@@ -1,12 +1,15 @@
 <template>
   <div class="component-test">
-    <h1 class="page-title">CTable-测试页面</h1>
+    <h1 class="page-title">CssLayout-测试页面</h1>
 
     <div class="test-grid">
       <div class="test-item">
-        <h2>可编辑表格</h2>
-        <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'"
-          @save="handleSave" @field-change="handleFieldChange" />
+        <h2>砌体布局-columns-visibility</h2>
+        <div class="grid-container">
+          <div v-for="fit in fits" :key="fit" class="block">
+            <el-image :src="url" :fit="fit" />
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ComponentTest from '../pages/ComponentTest.vue'
 import Search from '../pages/Search.vue'
 import EditTable from '../pages/EditTable.vue'
+import CssLayout from '../pages/CssLayout.vue'
 
 const routes = [
   {
@@ -22,6 +23,11 @@ const routes = [
     path: '/component-search',
     name: 'Search',
     component: Search
+  },
+  {
+    path: '/css-layout',
+    name: 'CssLayout',
+    component: CssLayout
   }
 ]
 

@@ -13,30 +13,17 @@
                         <el-menu-item index="1-1" route="/component-search">查询组件</el-menu-item>
                         <el-menu-item index="1-2" route="/component-edit-table">可编辑表格</el-menu-item>
                     </el-menu-item-group>
-                    <el-menu-item-group title="Group Two">
-                        <el-menu-item index="1-3">item three</el-menu-item>
+                </el-sub-menu> 
+                <el-sub-menu index="2">
+                    <template #title>
+                        <el-icon><icon-menu /></el-icon>
+                        <span>CSS</span>
+                    </template>
+                    <el-menu-item-group title="Group One">
+                        <el-menu-item index="2-1" route="/css-layout">Css布局</el-menu-item>
                     </el-menu-item-group>
-                    <el-sub-menu index="1-4">
-                        <template #title>item four</template>
-                        <el-menu-item index="1-4-1">item one</el-menu-item>
-                    </el-sub-menu>
                 </el-sub-menu>
-                <el-menu-item index="2">
-                    <el-icon><icon-menu /></el-icon>
-                    <span>Navigator Two</span>
-                </el-menu-item>
-                <el-menu-item index="3" disabled>
-                    <el-icon>
-                        <document />
-                    </el-icon>
-                    <span>Navigator Three</span>
-                </el-menu-item>
-                <el-menu-item index="4">
-                    <el-icon>
-                        <Setting />
-                    </el-icon>
-                    <span>Navigator Four</span>
-                </el-menu-item>
+              
             </el-menu>
         </el-scrollbar>
     </el-aside>
@@ -49,7 +36,7 @@ import {
     Location,
     Setting,
 } from '@element-plus/icons-vue'
-import { ElMenu, ElSubMenu, ElMenuItem, ElAside, ElScrollbar,ElIcon } from 'element-plus'
+import { ElMenu, ElSubMenu, ElMenuItem, ElAside, ElScrollbar, ElIcon } from 'element-plus'
 const handleOpen = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
 }
@@ -58,11 +45,10 @@ const handleClose = (key: string, keyPath: string[]) => {
 }
 </script>
 <style scoped>
-.el-aside{
+.el-aside {
     position: fixed;
     height: 100%;
     z-index: 10;
     /* position: fixed; */
 }
 </style>
-

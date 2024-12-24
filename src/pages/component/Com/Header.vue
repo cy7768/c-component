@@ -1,17 +1,16 @@
 <template>
     <el-header class="header">
+
         <el-menu router="true" :default-active="activeIndex" mode="horizontal" :ellipsis="false" @select="handleSelect">
             <el-menu-item route="/" index="0">
-                <img style="width: 100px" :src="logo"
-                    alt="Element logo" />
+                <img style="width: 100px" :src="logo" alt="Element logo" />
             </el-menu-item>
             <el-menu-item index="1">
-
-                <el-switch v-model="isDark" inline-prompt size="small"
-                    style="--el-switch-on-color: #242424; --el-switch-off-color: #409EFF" :active-icon="Moon"
-                    :inactive-icon="Sunny" />
-
-
+                <template #title>
+                    <el-switch v-model="isDark" inline-prompt
+                        style="--el-switch-on-color: #242424; --el-switch-off-color: #409EFF" :active-icon="Moon"
+                        :inactive-icon="Sunny" />
+                </template>
             </el-menu-item>
             <el-sub-menu index="2">
                 <template #title>Workspace</template>
@@ -84,5 +83,21 @@ html.dark {
     background-color: var(--el-bg-color);
     box-shadow: var(--el-box-shadow-lighter);
     transition: background-color 0.3s;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+:deep(.el-menu-item) {
+    padding: 0 0px !important;
+}
+
+:deep(.el-switch) {
+    margin: 0;
+    /* transform: scale(0.9); */
+    /* flex: none; */
 }
 </style>

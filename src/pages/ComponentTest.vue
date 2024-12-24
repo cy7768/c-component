@@ -73,6 +73,7 @@
           </c-form>
         </div>
       </div>
+      
       <div class="test-item">
         <h2>动态添加搜索条件</h2>
         <div class="component-container">
@@ -88,17 +89,14 @@
             <el-image :src="url" :fit="fit" />
           </div>
         </div>
+      </div>
 
-
+      <div class="test-item">
+        <h2>可编辑表格</h2>
+        <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'"
+          @save="handleSave" @field-change="handleFieldChange" />
       </div>
     </div>
-
-    <div class="test-item">
-      <h2>可编辑表格</h2>
-      <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'"
-        @save="handleSave" @field-change="handleFieldChange" />
-    </div>
-
   </div>
 </template>
 
