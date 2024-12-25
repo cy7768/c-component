@@ -73,7 +73,7 @@
           </c-form>
         </div>
       </div>
-      
+
       <div class="test-item">
         <h2>动态添加搜索条件</h2>
         <div class="component-container">
@@ -83,7 +83,7 @@
         </div>
       </div>
       <div class="test-item">
-        <h2>砌体布局-columns-visibility</h2>
+        <h2>砌体布局-columns</h2>
         <div class="grid-container">
           <div v-for="fit in fits" :key="fit" class="block">
             <el-image :src="url" :fit="fit" />
@@ -96,14 +96,52 @@
         <c-table ref="tableRef" :data="tableData" :columns="columns" :edit-mode="'row'" :target="'dblclick'"
           @save="handleSave" @field-change="handleFieldChange" />
       </div>
+      <div class="container">
+        <el-button @click="visible = true">打开抽屉</el-button>
+        <!-- <teleport to="#drawer-container"> -->
+        <el-drawer ref="drawerRef" v-model="visible" title="抽屉" :append-to="'#drawer-container'" @open="onDrawerOpen">
+          <div>抽屉内容</div>
+        </el-drawer>
+        <!-- </Teleport> -->
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { CButton, CInput } from '../package/index'
-import { ElImage } from 'element-plus/es'
+import { ElImage, ElDrawer, ElButton } from 'element-plus/es'
+
+const drawerRef = ref()
+const visible = ref(false)
+const drawerContainer = ref()
+
+const onDrawerOpen = () => {
+  // 1. 打印 DOM 信息
+  console.log('Drawer Element:', drawerRef.value.$el)
+
+  // 2. 查找所有抽屉容器
+  const containers = document.querySelectorAll('.el-drawer__container')
+  console.log('All Drawer Containers:', containers)
+
+  // 3. 打印挂载路径
+  const container = containers[containers.length - 1]
+  let element = container
+  const path = []
+
+  while (element && element !== document.documentElement) {
+    path.unshift({
+      element,
+      tag: element.tagName,
+      class: element.className,
+      id: element.id
+    })
+    element = element.parentElement
+  }
+
+  console.log('Mount Path:', path)
+}
 
 const fits = [
   'fill',
@@ -363,6 +401,23 @@ const handleFormReset = () => {
 const handleFormChange = (prop: string, value: any) => {
   console.log('字段变化:', prop, value)
 }
+
+onMounted(() => {
+  if (!document.querySelector('#drawer-container')) {
+    
+    const container = document.createElement('div')
+    // container.id = 'drawerContainer'
+    container.setAttribute('ref', 'drawerContainer');
+    container.setAttribute('style', 'position: relative; width: 600px; height: 400px; border: 1px solid #ccc; margin: 50px auto; padding: 20px; zIndex:2000;')
+    // container.style.position = 'relative'
+    // container.style.width = '600px'
+    // container.style.height = '400px'
+    // container.style.border = '1px solid #ccc'
+    // container.style.margin = '50px auto'
+    // container.style.padding = '20px'
+    document.body.appendChild(container)
+  }
+})
 </script>
 
 <style scoped>
@@ -448,5 +503,19 @@ const handleFormChange = (prop: string, value: any) => {
     width: 100%;
     border: 1px solid #d12e2e;
   } */
+}
+
+#drawer-container {
+  position: relative;
+  width: 600px;
+  height: 400px;
+  border: 1px solid #ccc;
+  margin: 50px auto;
+  padding: 20px;
+}
+
+.container {
+  position: relative;
+  padding: 20px;
 }
 </style>

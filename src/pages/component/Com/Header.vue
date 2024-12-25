@@ -1,17 +1,15 @@
 <template>
     <el-header class="header">
 
-        <el-menu router="true" :default-active="activeIndex" mode="horizontal" :ellipsis="false" @select="handleSelect">
+        <el-menu :router="true" :default-active="activeIndex" mode="horizontal" :ellipsis="false" @select="handleSelect">
             <el-menu-item route="/" index="0">
-                <img style="width: 100px" :src="logo" alt="Element logo" />
+                <img style="width: 100px" :src="isDark ? ph_logo : logo" alt="Element logo" />
             </el-menu-item>
-            <el-menu-item index="1">
-                <template #title>
-                    <el-switch v-model="isDark" inline-prompt
-                        style="--el-switch-on-color: #242424; --el-switch-off-color: #409EFF" :active-icon="Moon"
-                        :inactive-icon="Sunny" />
-                </template>
-            </el-menu-item>
+            <div class="switch-wrapper">
+                <el-switch v-model="isDark" inline-prompt
+                    style="--el-switch-on-color: #242424; --el-switch-off-color: #409EFF" :active-icon="Moon"
+                    :inactive-icon="Sunny" />
+            </div>
             <el-sub-menu index="2">
                 <template #title>Workspace</template>
                 <el-menu-item index="2-1" route="/css-test">item one</el-menu-item>
@@ -30,7 +28,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { ElMenu, ElSubMenu, ElMenuItem, ElHeader, ElSwitch } from 'element-plus'
-import logo from '../../../public/images/logo.png'
+import logo from '/images/logo.png'
+import ph_logo from '/images/ph_logo.png'
 
 import { Moon, Sunny } from '@element-plus/icons-vue'
 import { useDark, useToggle } from '@vueuse/core'
@@ -40,6 +39,7 @@ const activeIndex = ref('1')
 const handleSelect = (key: string, keyPath: string[]) => {
     console.log(key, keyPath)
 }
+
 </script>
 <style scoped>
 .el-menu--horizontal>.el-menu-item:nth-child(1) {
@@ -60,19 +60,6 @@ const handleSelect = (key: string, keyPath: string[]) => {
     }
 }
 
-html.dark {
-    --el-bg-color: #141414;
-    --el-text-color-primary: #E5EAF3;
-    --el-text-color-regular: #CFD3DC;
-    --el-button-bg-color: #626aef;
-    --el-button-text-color: #fff;
-    --el-button-hover-bg-color: #727fff;
-    --el-button-hover-text-color: #fff;
-    --el-button-disabled-bg-color: #4c4c4c;
-    --el-button-disabled-text-color: #a8abb2;
-    color-scheme: dark;
-}
-
 .theme-switch {
     position: fixed;
     top: 20px;
@@ -91,13 +78,10 @@ html.dark {
     height: 100%;
 }
 
-:deep(.el-menu-item) {
-    padding: 0 0px !important;
-}
-
-:deep(.el-switch) {
-    margin: 0;
-    /* transform: scale(0.9); */
-    /* flex: none; */
+.switch-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
 }
 </style>

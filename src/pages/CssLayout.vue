@@ -4,7 +4,7 @@
 
     <div class="test-grid">
       <div class="test-item">
-        <h2>砌体布局-columns-visibility</h2>
+        <h2>砌体布局-columns</h2>
         <div class="grid-container">
           <div v-for="fit in fits" :key="fit" class="block">
             <el-image :src="url" :fit="fit" />

@@ -1,7 +1,7 @@
 <template>
     <el-aside class="aside">
         <el-scrollbar>
-            <el-menu router="true" default-active="2" class="el-aside" @open="handleOpen" @close="handleClose">
+            <el-menu :router="true" default-active="2" class="el-aside" @open="handleOpen" @close="handleClose">
                 <el-sub-menu index="1">
                     <template #title>
                         <el-icon>

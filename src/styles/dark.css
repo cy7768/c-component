@@ -1,0 +1,38 @@
+html,
+body {
+    margin: 0 !important;
+}
+
+/* 亮色主题 */
+:root {
+    color-scheme: light;
+}
+
+/* 暗色主题 */
+html.dark {
+    color-scheme: dark;
+    --el-bg-color: #141414;
+    --el-bg-color-overlay: #1d1e1f;
+    --el-text-color-primary: #E5EAF3;
+    --el-text-color-regular: #CFD3DC;
+    --el-border-color: #363637;
+    --el-border-color-light: #484849;
+    --el-border-color-lighter: #5d5d5f;
+    --el-fill-color: #262727;
+    --el-fill-color-light: #1d1d1d;
+    --el-fill-color-lighter: #262727;
+    --el-mask-color: rgba(0, 0, 0, 0.8);
+
+    /* 按钮相关 */
+    --el-button-bg-color: #626aef;
+    --el-button-text-color: #fff;
+    --el-button-hover-bg-color: #727fff;
+    --el-button-hover-text-color: #fff;
+    --el-button-disabled-bg-color: #4c4c4c;
+    --el-button-disabled-text-color: #a8abb2;
+
+    /* 菜单相关 */
+    --el-menu-bg-color: #141414;
+    --el-menu-hover-bg-color: #1d1d1d;
+    --el-menu-active-color: var(--el-color-primary);
+}
