@@ -4,6 +4,27 @@
 
     <div class="test-grid">
       <div class="test-item">
+        <h2>position定位 <el-switch v-model="isRead" :active-action-icon="View" :inactive-action-icon="Hide"></el-switch>
+        </h2>
+        <div class="position-container">
+          <el-space fill wrap :fill-ratio="isRead ? 100 : 10" :direction="isRead ? 'vertical' : 'horizontal'"
+            style="width: 100%;">
+            <el-card shadow="none" v-for="model in positionData" :key="model">
+              <template #header>
+                <h4>{{ model.title }}</h4>
+              </template>
+              <div class="position-content-container">
+                <h5>{{ model.des }}</h5>
+              </div>
+
+            </el-card>
+          </el-space>
+
+        </div>
+      </div>
+    </div>
+    <div class="test-grid">
+      <div class="test-item">
         <h2>砌体布局-columns</h2>
         <div class="grid-container">
           <div v-for="fit in fits" :key="fit" class="block">
@@ -17,8 +38,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { CButton, CInput } from '../package/index'
-import { ElImage } from 'element-plus/es'
+import { Hide, View } from '@element-plus/icons-vue'
+import { ElImage, ElCard, ElSpace, ElSwitch } from 'element-plus/es'
 
 const fits = [
   'fill',
@@ -26,46 +47,39 @@ const fits = [
   'cover',
   'none',
   'scale-down',
-] as ImageProps['fit'][]
+] as const
 const url =
   'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
 
-const inputValue = ref('')
-const clearableValue = ref('')
 const tableRef = ref()
-const originalData = ref<TableRow[]>([])
-const formRef = ref()
-const searchRef = ref()
 
 interface TableRow {
   id: number
-  name: string
-  age: number
-  role: string
-  birth: string
-  score: number
-  remark: string
-  editing?: boolean
+  title: string
+  des: string
 }
 
-const tableData = ref<TableRow[]>([
+const isRead = ref(false)
+const positionData = ref<TableRow[]>([
   {
     id: 1,
-    name: '张三',
-    age: 25,
-    role: 'admin',
-    birth: '1998-01-01',
-    score: 85,
-    remark: '这是一条测试备注'
+    title: 'absolute',
+    des: '属性用于将元素相对于最近的已定位祖先元素进行定位（如果没有已定位的祖先元素，则相对于初始包含块，即文档的根元素）'
   },
   {
     id: 2,
-    name: '李四',
-    age: 30,
-    role: 'user',
-    birth: '1993-05-15',
-    score: 92,
-    remark: '优秀员工',
+    title: 'fixed',
+    des: '元素相对于视口进行定位，这意味着无论用户滚动页面，元素的位置都不会改变。'
+  },
+  {
+    id: 3,
+    title: 'relative',
+    des: '元素相对于其正常位置进行定位，通常用于相对定位子元素。'
+  },
+  {
+    id: 4,
+    title: 'sticky',
+    des: '元素根据用户的滚动位置进行定位，类似于固定定位，但只在用户滚动到一定位置时生效。'
   }
 ])
 
@@ -351,17 +365,10 @@ const handleFormChange = (prop: string, value: any) => {
 }
 
 .grid-container {
+  columns: 300px 3;
+}
 
-  /* column-count: 3; */
-  columns: 300px 3
-    /* display: grid;
-  grid-template-columns: 10% 59% 30%;
-  flex-wrap: wrap;
-  gap: 1%; */
-
-    /* el-row {
-    width: 100%;
-    border: 1px solid #d12e2e;
-  } */
+.position-container {
+  width: 100%;
 }
 </style>

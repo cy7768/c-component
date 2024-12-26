@@ -35,4 +35,10 @@ html.dark {
     --el-menu-bg-color: #141414;
     --el-menu-hover-bg-color: #1d1d1d;
     --el-menu-active-color: var(--el-color-primary);
+
+    .el-card {
+        background-color: var(--el-bg-color);
+        border-color: var(--el-border-color);
+        color: var(--el-text-color-primary);
+    }
 }

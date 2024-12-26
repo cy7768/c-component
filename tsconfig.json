@@ -27,7 +27,10 @@
     ],
     // 跳过声明文件的类型检查
     "skipLibCheck": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   // 指定要包含的文件匹配模式
   "include": [

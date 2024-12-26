@@ -1,45 +1,47 @@
 <template>
-    <div>
-        <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline class="horizontal-form">
-            <div class="form-content">
-                <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop" :rules="field.rules"
-                    class="form-item">
-                    <div class="form-item-content">
-                        <el-tooltip class="box-item" effect="dark" :content="field.label" placement="top-start">
-                            <el-select :model-value="selectedFields[field.label]"
-                                @update:model-value="getFields(field.label)" clearable class="form-item-select"
-                                @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
-                                <el-option v-for="option in getAvailableOptions(field)" :key="option.prop"
-                                    :value="option.prop" :label="option.label" :disabled="option.disabled" />
-                            </el-select>
+    <el-config-provider :locale="zhCn">
+        <div>
+            <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline class="horizontal-form">
+                <div class="form-content">
+                    <el-form-item v-for="field in displayFields" :key="field.prop" :prop="field.prop"
+                        :rules="field.rules" class="form-item">
+                        <div class="form-item-content">
+                            <el-tooltip class="box-item" effect="dark" :content="field.label" placement="top-start">
+                                <el-select :model-value="selectedFields[field.label]"
+                                    @update:model-value="getFields(field.label)" clearable class="form-item-select"
+                                    @clear="removeField(field.prop)" @change="handleFieldTypeChange($event, field)">
+                                    <el-option v-for="option in getAvailableOptions(field)" :key="option.prop"
+                                        :value="option.prop" :label="option.label" :disabled="option.disabled" />
+                                </el-select>
 
-                        </el-tooltip>
-                        <component :is="renderComponent(field)" v-model="formData[field.prop]"
-                            v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)">
-                        </component>
-                    </div>
-                </el-form-item>
-                <el-space>
+                            </el-tooltip>
+                            <component :is="renderComponent(field)" v-model="formData[field.prop]"
+                                v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)">
+                            </component>
+                        </div>
+                    </el-form-item>
+                    <el-space>
 
-                    <el-button @click="handleAddField" type="success">
-                        添加条件
-                    </el-button>
-                    <el-button v-if="showSubmit" type="primary" @click="handleSubmit" :loading="loading">
-                        {{ submitText }}
-                    </el-button>
-                    <el-button v-if="showReset" @click="handleReset">
-                        {{ resetText }}
-                    </el-button>
+                        <el-button @click="handleAddField" type="success">
+                            添加条件
+                        </el-button>
+                        <el-button v-if="showSubmit" type="primary" @click="handleSubmit" :loading="loading">
+                            {{ submitText }}
+                        </el-button>
+                        <el-button v-if="showReset" @click="handleReset">
+                            {{ resetText }}
+                        </el-button>
 
-                    <slot name="buttons" />
-                </el-space>
-            </div>
+                        <slot name="buttons" />
+                    </el-space>
+                </div>
 
-            <div class="form-buttons" v-if="showButtons">
+                <div class="form-buttons" v-if="showButtons">
 
-            </div>
-        </el-form>
-    </div>
+                </div>
+            </el-form>
+        </div>
+    </el-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -65,9 +67,11 @@ import {
     ElSpace,
     ElMessage,
     ElIcon,
-    ElTooltip
+    ElTooltip,
+    ElConfigProvider
 } from 'element-plus'
 import type { FormInstance } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 type FieldType = 'input' | 'select' | 'date' | 'number' | 'switch' |
     'radio' | 'checkbox' | 'textarea' | 'password'
@@ -175,6 +179,24 @@ const renderComponent = (field: FormField) => {
                         }
                     }, () => field.options?.map(opt =>
                         h(ElCheckbox, {
+                            key: opt.value,
+                            value: opt.value,
+                            label: opt.label
+                        })
+                    ))
+                }
+            }
+        case 'select':
+            return {
+                name: 'Select',
+                render() {
+                    return h(ElSelect, {
+                        modelValue: formData.value[field.prop],
+                        'onUpdate:modelValue': (val: any) => {
+                            formData.value[field.prop] = val
+                        }
+                    }, () => field.options?.map(opt =>
+                        h(ElOption, {
                             key: opt.value,
                             value: opt.value,
                             label: opt.label

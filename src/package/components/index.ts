@@ -3,12 +3,14 @@ import Button from './button/src/button.vue'
 import Input from './input/src/input.vue'
 import Table from './table/src/table.vue'
 import Form from './form/src/form.vue'
+import Search from './form/src/search.vue'
 
 const components = {
   CButton: Button,
   CInput: Input,
   CTable: Table,
-  CForm: Form
+  CForm: Form,
+  CSearch: Search
 }
 
 export default {
@@ -19,4 +21,4 @@ export default {
   }
 }
 
-export { Button as CButton, Input as CInput, Table as CTable, Form as CForm }
+export { Button as CButton, Input as CInput, Table as CTable, Form as CForm, Search as CSearch }

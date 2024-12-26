@@ -1,44 +1,46 @@
 <template>
-    <div>
-        <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline
-            class="horizontal-form">
-            <div class="form-content">
-                <el-form-item v-for="field in displayFields" :key="field.prop" :label="field.label" :prop="field.prop"
-                    :rules="field.rules" class="form-item">
-                    <div class="form-item-content">
-                        <component :is="renderComponent(field)" v-model="formData[field.prop]"
-                            v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)" />
-                        <el-button v-if="field.removable !== false" type="danger" link @click="removeField(field.prop)">
-                            <el-icon>
-                                <CircleCloseFilled />
-                            </el-icon>
+    <el-config-provider :locale="zhCn">
+        <div>
+            <el-form ref="formRef" :model="formData" :rules="formRules" v-bind="$attrs" inline class="horizontal-form">
+                <div class="form-content">
+                    <el-form-item v-for="field in displayFields" :key="field.prop" :label="field.label"
+                        :prop="field.prop" :rules="field.rules" class="form-item">
+                        <div class="form-item-content">
+                            <component :is="renderComponent(field)" v-model="formData[field.prop]"
+                                v-bind="getComponentProps(field)" @change="handleFieldChange(field.prop, $event)" />
+                            <el-button v-if="field.removable !== false" type="danger" link
+                                @click="removeField(field.prop)">
+                                <el-icon>
+                                    <CircleCloseFilled />
+                                </el-icon>
+                            </el-button>
+                        </div>
+                    </el-form-item>
+                    <el-space>
+                        <el-select v-model="selectedField" placeholder="选择已有字段" style="width: 200px">
+                            <el-option v-for="field in availableFields" :key="field.prop" :label="field.label"
+                                :value="field.prop" />
+                        </el-select>
+                        <el-button @click="addExistingField" type="success" :disabled="!selectedField">
+                            添加条件
                         </el-button>
-                    </div>
-                </el-form-item>
-                <el-space>
-                    <el-select v-model="selectedField" placeholder="选择已有字段" style="width: 200px">
-                        <el-option v-for="field in availableFields" :key="field.prop" :label="field.label"
-                            :value="field.prop" />
-                    </el-select>
-                    <el-button @click="addExistingField" type="success" :disabled="!selectedField">
-                        添加条件
-                    </el-button>
-                    <el-button v-if="showSubmit" type="primary" @click="handleSubmit" :loading="loading">
-                        {{ submitText }}
-                    </el-button>
-                    <el-button v-if="showReset" @click="handleReset">
-                        {{ resetText }}
-                    </el-button>
+                        <el-button v-if="showSubmit" type="primary" @click="handleSubmit" :loading="loading">
+                            {{ submitText }}
+                        </el-button>
+                        <el-button v-if="showReset" @click="handleReset">
+                            {{ resetText }}
+                        </el-button>
 
-                    <slot name="buttons" />
-                </el-space>
-            </div>
+                        <slot name="buttons" />
+                    </el-space>
+                </div>
 
-            <div class="form-buttons" v-if="showButtons">
+                <div class="form-buttons" v-if="showButtons">
 
-            </div>
-        </el-form>
-    </div>
+                </div>
+            </el-form>
+        </div>
+    </el-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -63,8 +65,10 @@ import {
     ElSpace,
     ElMessage,
     ElIcon,
+    ElConfigProvider,
 } from 'element-plus'
 import type { FormInstance } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 type FieldType = 'input' | 'select' | 'date' | 'number' | 'switch' |
     'radio' | 'checkbox' | 'textarea' | 'password'
@@ -172,6 +176,24 @@ const renderComponent = (field: FormField) => {
                         }
                     }, () => field.options?.map(opt =>
                         h(ElCheckbox, {
+                            key: opt.value,
+                            value: opt.value,
+                            label: opt.label
+                        })
+                    ))
+                }
+            }
+        case 'select':
+            return {
+                name: 'Select',
+                render() {
+                    return h(ElSelect, {
+                        modelValue: formData.value[field.prop],
+                        'onUpdate:modelValue': (val: any) => {
+                            formData.value[field.prop] = val
+                        }
+                    }, () => field.options?.map(opt =>
+                        h(ElOption, {
                             key: opt.value,
                             value: opt.value,
                             label: opt.label
