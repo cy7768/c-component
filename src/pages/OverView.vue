@@ -1,7 +1,7 @@
 <template>
   <div class="component-test">
-    <el-space direction="vertical">
-      <el-card shadow="none" v-for="route in router" :key="route.children" :label="route.meta?.title || route.name"
+    <!-- <el-space style="width: 100%;" fll wrap :fill-ratio="10" direction="vertical"> -->
+      <el-card style="margin-bottom: 20px;" shadow="none" v-for="route in router" :key="route.children" :label="route.meta?.title || route.name"
         :name="route.path">
         <template #header>
           <el-text>{{ route.meta?.title || route.name }}</el-text>
@@ -10,7 +10,7 @@
           <component :is="getComponent(child.name as string)" />
         </el-card>
       </el-card>
-    </el-space>
+    <!-- </el-space> -->
   </div>
 </template>
 

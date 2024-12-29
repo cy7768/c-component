@@ -382,7 +382,7 @@ defineExpose({
 <style lang="scss" scoped>
 :deep(.el-input),
 :deep(.el-select),
-:deep(.el-date-picker),
+:deep(.el-date-editor.el-input),
 :deep(.el-input-number) {
     width: 100%;
 }
