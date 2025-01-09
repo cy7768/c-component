@@ -1,0 +1,20 @@
+{
+  "name": "sup-utils",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/sup-utils.umd.js",
+  "module": "dist/sup-utils.mjs",
+  "types": "dist/sup-utils.d.ts",
+  "scripts": {
+    "build": "vite build"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "vite": "^6.0.7"
+  }
+}
