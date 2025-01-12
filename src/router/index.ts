@@ -3,6 +3,7 @@ import OverView from '../pages/OverView.vue'
 import Search from '../pages/Search.vue'
 import EditTable from '../pages/EditTable.vue'
 import CssLayout from '../pages/CssLayout.vue'
+import UploadFile from '../pages/UploadFile.vue'
 
 const routes = [
   {
@@ -21,6 +22,14 @@ const routes = [
       title:'组件'
     },
     children:[
+      {
+        path: '/upload-file',
+        name: 'UploadFile',
+        meta:{
+          title:'上传文件',
+        },
+        component: UploadFile
+      },
       {
         path: '/edit-table',
         name: 'EditTable',

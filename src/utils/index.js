@@ -1,5 +1,0 @@
-const file = () => {
-
-}
-
-export { file }
