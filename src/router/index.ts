@@ -4,6 +4,7 @@ import Search from '../pages/Search.vue'
 import EditTable from '../pages/EditTable.vue'
 import CssLayout from '../pages/CssLayout.vue'
 import UploadFile from '../pages/UploadFile.vue'
+import EditDialog from '@/pages/EditDialog.vue' 
 
 const routes = [
   {
@@ -45,6 +46,14 @@ const routes = [
           title:'搜索组件',
         },
         component: Search
+      },
+        {
+        path: '/edit-dialog',
+        name: 'EditDialog',   
+        meta:{
+          title:'弹窗组件',
+        },
+        component: EditDialog
       },
     ]
   },
