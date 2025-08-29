@@ -62,5 +62,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "spark-md5": "^3.0.2"
+  }
 }

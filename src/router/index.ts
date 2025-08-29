@@ -5,6 +5,7 @@ import EditTable from '../pages/EditTable.vue'
 import CssLayout from '../pages/CssLayout.vue'
 import UploadFile from '../pages/UploadFile.vue'
 import EditDialog from '@/pages/EditDialog.vue' 
+import Utils from '../pages/Utils.vue'
 
 const routes = [
   {
@@ -70,6 +71,22 @@ const routes = [
           title:'CSS布局',
         },
         component: CssLayout
+      }
+    ]
+  },
+  {
+    path: '/utils',
+    meta:{
+      title:'工具函数'
+    },
+    children:[
+      {
+        path: '/sup-utils',
+        name: 'Utils',
+        meta:{
+          title:'工具函数',
+        },
+        component: Utils
       }
     ]
   },

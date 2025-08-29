@@ -8,7 +8,7 @@
         </h2>
         <div class="position-container">
           <el-space fill wrap :fill-ratio="isRead ? 100 : 10" :direction="isRead ? 'vertical' : 'horizontal'"
-            style="width: 100%;">
+                    style="width: 100%;">
             <el-card shadow="none" v-for="model in positionData" :key="model">
               <template #header>
                 <h4>{{ model.title }}</h4>
@@ -49,7 +49,7 @@ const fits = [
   'scale-down',
 ] as const
 const url =
-  'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
+    'https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg'
 
 interface TableRow {
   id: number
