@@ -103,7 +103,7 @@
               <span class="task-title">{{ task.name }}</span>
               <span class="task-progress">{{ task.progress }}%</span>
             </div>
-            <div class="task-bar-progress" :style="{ width: task.progress + '%' }"></div>
+            <div class="task-bar-progress" :style="{ width: task.progress + '%', borderRadius: Math.min(computedTaskBarHeight / 2, 12) + 'px' }"></div>
             
             <!-- 进度拖动手柄 -->
             <div 
@@ -125,6 +125,24 @@
             ></div>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <!-- 外部横向滚动条 -->
+    <div class="gantt-external-scrollbar">
+      <div 
+        class="scrollbar-track"
+        :style="{ marginLeft: sidebarWidth + 'px' }"
+      >
+        <div 
+          class="scrollbar-thumb" 
+          ref="scrollbarThumbRef"
+          @mousedown="startScrollbarDrag"
+          :style="{ 
+            left: scrollbarThumbLeft + 'px', 
+            width: scrollbarThumbWidth + 'px' 
+          }"
+        ></div>
       </div>
     </div>
   </div>
@@ -181,11 +199,13 @@ const props = withDefaults(defineProps<{
   endDate?: Date
   cellWidth?: number
   rowHeight?: number
+  taskBarHeight?: number
   dateFormat?: string
   columns?: GanttColumn[]
 }>(), {
   cellWidth: 60,
   rowHeight: 40,
+  taskBarHeight: 24,
   dateFormat: 'MM/DD',
   columns: () => [{ key: 'name', label: '任务名称', width: 200 }]
 })
@@ -218,6 +238,7 @@ function getColumnValue(task: GanttTask, column: GanttColumn): string {
 const chartRef = ref<HTMLElement>()
 const sidebarRef = ref<HTMLElement>()
 const timelineHeaderRef = ref<HTMLElement>()
+const scrollbarThumbRef = ref<HTMLElement>()
 const draggingTask = ref<GanttTask | null>(null)
 const resizingTask = ref<{ task: GanttTask; direction: 'left' | 'right' } | null>(null)
 const progressDragging = ref<GanttTask | null>(null)
@@ -225,6 +246,26 @@ const dragStartX = ref(0)
 const dragStartDate = ref<Date>()
 const dragStartProgress = ref(0)
 const isScrollSyncing = ref(false)
+
+// 外部滚动条相关变量
+const scrollbarThumbLeft = ref(0)
+const scrollbarThumbWidth = ref(100)
+const isScrollbarDragging = ref(false)
+const scrollbarDragStartX = ref(0)
+const scrollbarDragStartLeft = ref(0)
+
+// 计算左侧边栏宽度
+const sidebarWidth = computed(() => {
+  return props.columns.reduce((sum, col) => sum + (col.width || 200), 0)
+})
+
+// 计算任务条高度（带限制）
+const computedTaskBarHeight = computed(() => {
+  // 限制任务条高度在 12px 到 rowHeight-8px 之间
+  const minHeight = 12
+  const maxHeight = props.rowHeight - 8
+  return Math.max(minHeight, Math.min(props.taskBarHeight, maxHeight))
+})
 
 // 计算时间轴数据
 const timelineData = computed<TimelineItem[]>(() => {
@@ -349,9 +390,17 @@ function getTaskBarStyle(task: GanttTask) {
   // 计算任务持续天数
   const duration = Math.floor((task.endDate.getTime() - task.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
   
+  // 计算任务条在行内的垂直居中位置
+  const topOffset = (props.rowHeight - computedTaskBarHeight.value) / 2
+  // 计算圆角半径（高度的一半，但不超过12px）
+  const borderRadius = Math.min(computedTaskBarHeight.value / 2, 12)
+  
   return {
     left: (startTimelineItem?.left || 0) + 'px',
     width: duration * props.cellWidth + 'px',
+    height: computedTaskBarHeight.value + 'px',
+    top: topOffset + 'px',
+    borderRadius: borderRadius + 'px',
     backgroundColor: task.color || '#409eff'
   }
 }
@@ -425,6 +474,9 @@ function onChartScroll() {
     sidebarRef.value.scrollTop = chartRef.value.scrollTop
   }
   
+  // 更新外部滚动条位置
+  updateScrollbarPosition()
+  
   nextTick(() => {
     isScrollSyncing.value = false
   })
@@ -440,6 +492,78 @@ function onSidebarScroll() {
   nextTick(() => {
     isScrollSyncing.value = false
   })
+}
+
+// 更新外部滚动条位置
+function updateScrollbarPosition() {
+  if (!chartRef.value) return
+  
+  const chart = chartRef.value
+  const scrollLeft = chart.scrollLeft
+  const scrollWidth = chart.scrollWidth
+  const clientWidth = chart.clientWidth
+  
+  // 计算滚动条轨道宽度（减去左侧边栏宽度）
+  const trackWidth = clientWidth - sidebarWidth.value
+  
+  // 计算滚动条拇指宽度和位置
+  const thumbWidth = Math.max(20, (clientWidth / scrollWidth) * trackWidth)
+  const thumbLeft = (scrollLeft / (scrollWidth - clientWidth)) * (trackWidth - thumbWidth)
+  
+  scrollbarThumbWidth.value = thumbWidth
+  scrollbarThumbLeft.value = thumbLeft
+}
+
+// 开始拖拽外部滚动条
+function startScrollbarDrag(event: MouseEvent) {
+  event.preventDefault()
+  
+  isScrollbarDragging.value = true
+  scrollbarDragStartX.value = event.clientX
+  scrollbarDragStartLeft.value = scrollbarThumbLeft.value
+  
+  document.addEventListener('mousemove', onScrollbarDrag)
+  document.addEventListener('mouseup', stopScrollbarDrag)
+}
+
+// 拖拽外部滚动条
+function onScrollbarDrag(event: MouseEvent) {
+  if (!isScrollbarDragging.value || !chartRef.value) return
+  
+  const deltaX = event.clientX - scrollbarDragStartX.value
+  const newLeft = scrollbarDragStartLeft.value + deltaX
+  
+  // 计算滚动条轨道宽度
+  const trackWidth = chartRef.value.clientWidth - sidebarWidth.value
+  const maxLeft = trackWidth - scrollbarThumbWidth.value
+  
+  const clampedLeft = Math.max(0, Math.min(newLeft, maxLeft))
+  
+  // 计算对应的滚动位置
+  const scrollRatio = clampedLeft / (trackWidth - scrollbarThumbWidth.value)
+  const maxScrollLeft = chartRef.value.scrollWidth - chartRef.value.clientWidth
+  const newScrollLeft = scrollRatio * maxScrollLeft
+  
+  // 同步滚动
+  isScrollSyncing.value = true
+  chartRef.value.scrollLeft = newScrollLeft
+  if (timelineHeaderRef.value) {
+    timelineHeaderRef.value.scrollLeft = newScrollLeft
+  }
+  
+  scrollbarThumbLeft.value = clampedLeft
+  
+  nextTick(() => {
+    isScrollSyncing.value = false
+  })
+}
+
+// 停止拖拽外部滚动条
+function stopScrollbarDrag() {
+  isScrollbarDragging.value = false
+  
+  document.removeEventListener('mousemove', onScrollbarDrag)
+  document.removeEventListener('mouseup', stopScrollbarDrag)
 }
 
 // 开始调整大小
@@ -536,6 +660,13 @@ function getTaskBarWidth(task: GanttTask): number {
 function onTaskClick(task: GanttTask) {
   emit('task-click', task)
 }
+
+// 初始化
+onMounted(() => {
+  nextTick(() => {
+    updateScrollbarPosition()
+  })
+})
 
 // 清理事件监听器
 onUnmounted(() => {
@@ -796,9 +927,6 @@ onUnmounted(() => {
         
         .task-bar {
           position: absolute;
-          top: 8px;
-          height: 24px;
-          border-radius: 12px;
           cursor: move;
           transition: all 0.2s ease;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -843,7 +971,6 @@ onUnmounted(() => {
             left: 0;
             height: 100%;
             background: rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
             transition: width 0.3s ease;
           }
           
@@ -921,5 +1048,37 @@ onUnmounted(() => {
 .gantt-chart::-webkit-scrollbar-thumb:hover,
 .gantt-timeline-header::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 外部滚动条样式 */
+.gantt-external-scrollbar {
+  height: 12px;
+  background: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  position: relative;
+  
+  .scrollbar-track {
+    height: 100%;
+    position: relative;
+    background: #f0f0f0;
+    
+    .scrollbar-thumb {
+      position: absolute;
+      top: 2px;
+      height: 8px;
+      background: #c1c1c1;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background: #a8a8a8;
+      }
+      
+      &:active {
+        background: #909090;
+      }
+    }
+  }
 }
 </style>

@@ -18,6 +18,7 @@
         :cell-width="80"
         :row-height="50"
         :columns="ganttColumns"
+        :task-bar-height="16"
         @task-update="onTaskUpdate"
         @task-click="onTaskClick"
       />
