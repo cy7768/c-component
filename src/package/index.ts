@@ -5,6 +5,7 @@ import CInput from './components/input/src/input.vue'
 import CTable from './components/table/src/table.vue'
 import CForm from './components/form/src/form.vue'
 import CSearch from './components/form/src/search.vue'
+import CGantt from './components/gantt/src/gantt.vue'
 
 // 引入 Element Plus 的基础样式
 import 'element-plus/dist/index.css'
@@ -17,13 +18,15 @@ import 'element-plus/dist/index.css'
  * - CTable: 表格组件
  * - CForm: 表单组件
  * - CSearch: 搜索组件
+ * - CGantt: 甘特图组件
  */
 const components = {
   CButton,
   CInput,
   CTable,
   CForm,
-  CSearch
+  CSearch,
+  CGantt
 }
 
 /**
@@ -45,5 +48,6 @@ export {
   CInput,    // 输入框组件
   CTable,    // 表格组件
   CForm,     // 表单组件  
-  CSearch     // 搜索组件
+  CSearch,   // 搜索组件
+  CGantt     // 甘特图组件
 }

@@ -33,6 +33,16 @@
         </div>
       </div>
     </div>
+    <div class="test-grid">
+      <div class="test-item">
+        <h2>弹性盒-flex</h2>
+        <div class="flex-container">
+          <div v-for="fit in fits" :key="fit" class="block">
+            <el-image :src="url" :fit="fit" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -78,45 +88,19 @@ const positionData = ref<TableRow[]>([
     id: 4,
     title: 'sticky',
     des: '元素根据用户的滚动位置进行定位，类似于固定定位，但只在用户滚动到一定位置时生效。'
+  },
+  {
+    id: 5,
+    title: 'flex',
+    des: '元素根据用户的滚动位置进行定位，类似于固定定位，但只在用户滚动到一定位置时生效。'
   }
 ])
 
 </script>
 
 <style scoped>
-.component-test {
-  padding: 20px;
-}
+@import "@/styles/index.css";
 
-.page-title {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.test-grid {
-  display: grid;
-}
-
-.test-item {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  margin: 16px 0;
-}
-
-.test-item h2 {
-  font-size: 18px;
-  margin-bottom: 16px;
-}
-
-.button-group>* {
-  margin-bottom: 8px;
-}
-
-.input-group>* {
-  width: 100%;
-  max-width: 300px;
-}
 
 .grid-container {
   columns: 300px 3;
@@ -124,5 +108,10 @@ const positionData = ref<TableRow[]>([
 
 .position-container {
   width: 100%;
+}
+
+.flex-container {
+  display: flex;
+  gap: 16px;
 }
 </style>

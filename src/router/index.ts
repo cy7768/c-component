@@ -6,6 +6,7 @@ import CssLayout from '../pages/CssLayout.vue'
 import UploadFile from '../pages/UploadFile.vue'
 import EditDialog from '@/pages/EditDialog.vue' 
 import Utils from '../pages/Utils.vue'
+import GanttDemo from '../pages/GanttDemo.vue'
 
 const routes = [
   {
@@ -56,6 +57,14 @@ const routes = [
         },
         component: EditDialog
       },
+      {
+        path: '/gantt-demo',
+        name: 'GanttDemo',   
+        meta:{
+          title:'甘特图组件',
+        },
+        component: GanttDemo
+      },
     ]
   },
   {
@@ -97,4 +106,4 @@ const router = createRouter({
   routes
 })
 
-export default router 
+export default router

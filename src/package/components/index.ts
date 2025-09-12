@@ -5,13 +5,15 @@ import Table from './table/src/table.vue'
 import Form from './form/src/form.vue'
 import Search from './form/src/search.vue'
 import Dialog from './dialog/src/dialog.vue'
+import Gantt from './gantt/src/gantt.vue'
 const components = {
   CButton: Button,
   CInput: Input,
   CTable: Table,
   CForm: Form,
   CSearch: Search,
-  CDialog: Dialog
+  CDialog: Dialog,
+  CGantt: Gantt
 }
 
 export default {
@@ -22,4 +24,4 @@ export default {
   }
 }
 
-export { Button as CButton, Input as CInput, Table as CTable, Form as CForm, Search as CSearch, Dialog as CDialog }
+export { Button as CButton, Input as CInput, Table as CTable, Form as CForm, Search as CSearch, Dialog as CDialog, Gantt as CGantt }
