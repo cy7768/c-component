@@ -128,21 +128,84 @@
       </div>
     </div>
     
-    <!-- 外部横向滚动条 -->
-    <div class="gantt-external-scrollbar">
-      <div 
-        class="scrollbar-track"
-        :style="{ marginLeft: sidebarWidth + 'px' }"
-      >
-        <div 
-          class="scrollbar-thumb" 
-          ref="scrollbarThumbRef"
-          @mousedown="startScrollbarDrag"
-          :style="{ 
-            left: scrollbarThumbLeft + 'px', 
-            width: scrollbarThumbWidth + 'px' 
-          }"
-        ></div>
+    <!-- 带时间标记的滚动条 -->    
+    <div class="gantt-timeline-scrollbar">
+      <div class="scrollbar-container" :style="{ marginLeft: sidebarWidth + 'px' }">
+        <div class="scrollbar-track" ref="scrollbarTrackRef" @click="onScrollbarClick">
+          <div class="scrollbar-thumb" ref="scrollbarThumbRef" @mousedown="startScrollbarDrag">
+            <div class="thumb-date-label" :style="thumbDateLabelStyle">{{ currentThumbDate }}</div>
+          </div>
+          <!-- 按天显示的时间刻度标记 -->
+          <div class="timeline-marks" :style="{ width: totalWidth + 'px' }">
+            <div 
+              v-for="mark in timelineMarks" 
+              :key="mark.key"
+              class="timeline-mark"
+              :class="[mark.type, `year-${mark.year}`]"
+              :style="{ left: mark.left + 'px' }"
+              :data-year="mark.year"
+            >
+              <div class="mark-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 时间滚动选择器 -->
+    <div class="gantt-time-scroller">
+      <div class="scroller-controls" :style="{ marginLeft: sidebarWidth + 'px' }">
+        <div class="scroller-vertical-layout">
+          <div class="scroller-group">
+            <label>年:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                :min="minYear" 
+                :max="maxYear" 
+                v-model="currentYear" 
+                @input="onYearChange"
+                class="time-slider year-slider"
+              />
+              <span class="scroller-value">{{ currentYear }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-group">
+            <label>月:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                min="1" 
+                max="12" 
+                v-model="currentMonth" 
+                @input="onMonthChange"
+                class="time-slider month-slider"
+              />
+              <span class="scroller-value">{{ currentMonth }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-group">
+            <label>日:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                min="1" 
+                :max="daysInCurrentMonth" 
+                v-model="currentDay" 
+                @input="onDayChange"
+                class="time-slider day-slider"
+              />
+              <span class="scroller-value">{{ currentDay }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-actions">
+            <button @click="goToToday" class="action-btn">今天</button>
+            <button @click="resetView" class="action-btn">重置</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -178,7 +241,6 @@ interface YearGroup {
   year: number
   startLeft: number
   width: number
-  months: MonthGroup[]
 }
 
 interface MonthGroup {
@@ -186,7 +248,6 @@ interface MonthGroup {
   month: number
   startLeft: number
   width: number
-  days: TimelineItem[]
 }
 
 defineOptions({
@@ -202,12 +263,16 @@ const props = withDefaults(defineProps<{
   taskBarHeight?: number
   dateFormat?: string
   columns?: GanttColumn[]
+  scrollRatio?: number
+  scrollUnit?: 'day' | 'month' | 'year'
 }>(), {
   cellWidth: 60,
   rowHeight: 40,
   taskBarHeight: 24,
   dateFormat: 'MM/DD',
-  columns: () => [{ key: 'name', label: '任务名称', width: 200 }]
+  columns: () => [{ key: 'name', label: '任务名称', width: 200 }],
+  scrollRatio: 1,
+  scrollUnit: 'month'
 })
 
 const emit = defineEmits<{
@@ -247,12 +312,90 @@ const dragStartDate = ref<Date>()
 const dragStartProgress = ref(0)
 const isScrollSyncing = ref(false)
 
-// 外部滚动条相关变量
-const scrollbarThumbLeft = ref(0)
-const scrollbarThumbWidth = ref(100)
+// 滚动条相关数据
+const scrollbarTrackRef = ref<HTMLElement>()
 const isScrollbarDragging = ref(false)
 const scrollbarDragStartX = ref(0)
-const scrollbarDragStartLeft = ref(0)
+const scrollbarDragStartScrollLeft = ref(0)
+
+// 时间滚动选择器相关数据
+
+const currentYear = ref(new Date().getFullYear())
+const currentMonth = ref(new Date().getMonth() + 1)
+const currentDay = ref(new Date().getDate())
+
+// 滑块位置状态（用于响应式更新日期显示）
+const thumbPosition = ref({ left: 0, width: 0 })
+
+// 年份范围
+const minYear = computed(() => {
+  const startYear = props.startDate ? props.startDate.getFullYear() : new Date().getFullYear() - 5
+  return startYear
+})
+const maxYear = computed(() => {
+  const endYear = props.endDate ? props.endDate.getFullYear() : new Date().getFullYear() + 5
+  return endYear
+})
+
+// 当前月份的天数
+const daysInCurrentMonth = computed(() => {
+  return new Date(currentYear.value, currentMonth.value, 0).getDate()
+})
+
+// 计算当前滑块指示的日期（严格按照步进器配置）
+const currentThumbDate = computed(() => {
+  // 直接使用步进器的年月日值，不依赖滑块位置计算
+  const year = currentYear.value
+  const month = currentMonth.value
+  const day = currentDay.value
+  
+  // 验证日期是否在时间轴数据范围内
+  if (timelineData.value.length === 0) {
+    return ''
+  }
+  
+  // 检查步进器配置的日期是否在时间轴中存在
+  const targetTime = new Date(year, month - 1, day).getTime()
+  const hasData = timelineData.value.some(item => {
+    const itemTime = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate()).getTime()
+    return itemTime === targetTime
+  })
+  
+  // 如果没有数据则忽略（返回空字符串）
+  if (!hasData) {
+    return ''
+  }
+  
+  // 格式化显示步进器配置的日期
+  return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
+})
+
+// 计算滑块日期标签的定位样式
+const thumbDateLabelStyle = computed(() => {
+  if (!scrollbarTrackRef.value) return {}
+  
+  const trackWidth = scrollbarTrackRef.value.clientWidth
+  const thumbCenter = thumbPosition.value.left + thumbPosition.value.width / 2
+  const labelHalfWidth = 40 // 标签宽度的一半
+  
+  // 边界检查和样式计算
+  if (thumbCenter > trackWidth - labelHalfWidth) {
+    return { transform: 'translateX(-100%)', left: '100%' }
+  } else if (thumbCenter < labelHalfWidth) {
+    return { transform: 'translateX(0)', left: '0%' }
+  }
+  
+  return { transform: 'translateX(-50%)', left: '50%' }
+})
+
+// 时间刻度标记计算
+const timelineMarks = computed(() => {
+  return timelineData.value.map(item => ({
+    key: `day-${item.key}`,
+    left: item.left,
+    year: item.date.getFullYear()
+  }))
+})
 
 // 计算左侧边栏宽度
 const sidebarWidth = computed(() => {
@@ -261,7 +404,6 @@ const sidebarWidth = computed(() => {
 
 // 计算任务条高度（带限制）
 const computedTaskBarHeight = computed(() => {
-  // 限制任务条高度在 12px 到 rowHeight-8px 之间
   const minHeight = 12
   const maxHeight = props.rowHeight - 8
   return Math.max(minHeight, Math.min(props.taskBarHeight, maxHeight))
@@ -299,12 +441,12 @@ const totalWidth = computed(() => {
 // 计算年份分组
 const yearGroups = computed<YearGroup[]>(() => {
   const groups: YearGroup[] = []
-  const yearMap = new Map<number, { startLeft: number; endLeft: number; months: MonthGroup[] }>()
+  const yearMap = new Map<number, { startLeft: number; endLeft: number }>()
   
   timelineData.value.forEach(item => {
     const year = item.date.getFullYear()
     if (!yearMap.has(year)) {
-      yearMap.set(year, { startLeft: item.left, endLeft: item.left + props.cellWidth, months: [] })
+      yearMap.set(year, { startLeft: item.left, endLeft: item.left + props.cellWidth })
     } else {
       yearMap.get(year)!.endLeft = item.left + props.cellWidth
     }
@@ -314,8 +456,7 @@ const yearGroups = computed<YearGroup[]>(() => {
     groups.push({
       year,
       startLeft: value.startLeft,
-      width: value.endLeft - value.startLeft,
-      months: []
+      width: value.endLeft - value.startLeft
     })
   })
   
@@ -344,8 +485,7 @@ const monthGroups = computed<MonthGroup[]>(() => {
       year: value.year,
       month: value.month,
       startLeft: value.startLeft,
-      width: value.endLeft - value.startLeft,
-      days: []
+      width: value.endLeft - value.startLeft
     })
   })
   
@@ -378,8 +518,6 @@ function formatDate(date: Date): string {
 
 // 计算任务条样式
 function getTaskBarStyle(task: GanttTask) {
-  const startDate = props.startDate || getMinDate()
-  
   // 找到任务开始日期对应的时间轴项
   const taskStartTime = new Date(task.startDate.getFullYear(), task.startDate.getMonth(), task.startDate.getDate()).getTime()
   const startTimelineItem = timelineData.value.find(item => {
@@ -387,12 +525,9 @@ function getTaskBarStyle(task: GanttTask) {
     return itemTime === taskStartTime
   })
   
-  // 计算任务持续天数
+  // 计算任务持续天数和样式
   const duration = Math.floor((task.endDate.getTime() - task.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  
-  // 计算任务条在行内的垂直居中位置
   const topOffset = (props.rowHeight - computedTaskBarHeight.value) / 2
-  // 计算圆角半径（高度的一半，但不超过12px）
   const borderRadius = Math.min(computedTaskBarHeight.value / 2, 12)
   
   return {
@@ -474,8 +609,8 @@ function onChartScroll() {
     sidebarRef.value.scrollTop = chartRef.value.scrollTop
   }
   
-  // 更新外部滚动条位置
-  updateScrollbarPosition()
+  // 更新滚动条位置
+  updateScrollbarThumbPosition()
   
   nextTick(() => {
     isScrollSyncing.value = false
@@ -494,76 +629,102 @@ function onSidebarScroll() {
   })
 }
 
-// 更新外部滚动条位置
-function updateScrollbarPosition() {
-  if (!chartRef.value) return
+// 滚动条相关方法
+function updateScrollbarThumbPosition() {
+  if (!chartRef.value || !scrollbarTrackRef.value || !scrollbarThumbRef.value) return
   
-  const chart = chartRef.value
-  const scrollLeft = chart.scrollLeft
-  const scrollWidth = chart.scrollWidth
-  const clientWidth = chart.clientWidth
+  const chartElement = chartRef.value
+  const trackElement = scrollbarTrackRef.value
+  const thumbElement = scrollbarThumbRef.value
   
-  // 计算滚动条轨道宽度（减去左侧边栏宽度）
-  const trackWidth = clientWidth - sidebarWidth.value
+  // 计算滚动条滑块的位置和大小
+  const scrollRatio = chartElement.scrollLeft / (chartElement.scrollWidth - chartElement.clientWidth)
+  const thumbWidth = (chartElement.clientWidth / chartElement.scrollWidth) * trackElement.clientWidth
+  const thumbLeft = scrollRatio * (trackElement.clientWidth - thumbWidth)
   
-  // 计算滚动条拇指宽度和位置
-  const thumbWidth = Math.max(20, (clientWidth / scrollWidth) * trackWidth)
-  const thumbLeft = (scrollLeft / (scrollWidth - clientWidth)) * (trackWidth - thumbWidth)
+  // 更新DOM样式
+  thumbElement.style.width = thumbWidth + 'px'
+  thumbElement.style.left = thumbLeft + 'px'
   
-  scrollbarThumbWidth.value = thumbWidth
-  scrollbarThumbLeft.value = thumbLeft
+  // 更新响应式状态以触发日期显示更新
+  thumbPosition.value = { left: thumbLeft, width: thumbWidth }
+  
+  // 滑块位置仅用于显示，不更新步进器值（以步进器数据为准）
 }
 
-// 开始拖拽外部滚动条
+// 滚动条拖拽开始
 function startScrollbarDrag(event: MouseEvent) {
   event.preventDefault()
-  
   isScrollbarDragging.value = true
   scrollbarDragStartX.value = event.clientX
-  scrollbarDragStartLeft.value = scrollbarThumbLeft.value
+  scrollbarDragStartScrollLeft.value = chartRef.value?.scrollLeft || 0
   
   document.addEventListener('mousemove', onScrollbarDrag)
-  document.addEventListener('mouseup', stopScrollbarDrag)
+  document.addEventListener('mouseup', endScrollbarDrag)
 }
 
-// 拖拽外部滚动条
+// 滚动条拖拽中
 function onScrollbarDrag(event: MouseEvent) {
-  if (!isScrollbarDragging.value || !chartRef.value) return
+  if (!isScrollbarDragging.value || !chartRef.value || !scrollbarTrackRef.value) return
   
   const deltaX = event.clientX - scrollbarDragStartX.value
-  const newLeft = scrollbarDragStartLeft.value + deltaX
+  const trackWidth = scrollbarTrackRef.value.clientWidth
+  const chartElement = chartRef.value
   
-  // 计算滚动条轨道宽度
-  const trackWidth = chartRef.value.clientWidth - sidebarWidth.value
-  const maxLeft = trackWidth - scrollbarThumbWidth.value
+  // 计算滚动比例
+  const scrollRatio = deltaX / trackWidth
+  const maxScrollLeft = chartElement.scrollWidth - chartElement.clientWidth
+  const newScrollLeft = scrollbarDragStartScrollLeft.value + (scrollRatio * maxScrollLeft)
   
-  const clampedLeft = Math.max(0, Math.min(newLeft, maxLeft))
+  // 限制滚动范围
+  const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, newScrollLeft))
   
-  // 计算对应的滚动位置
-  const scrollRatio = clampedLeft / (trackWidth - scrollbarThumbWidth.value)
-  const maxScrollLeft = chartRef.value.scrollWidth - chartRef.value.clientWidth
-  const newScrollLeft = scrollRatio * maxScrollLeft
-  
-  // 同步滚动
   isScrollSyncing.value = true
-  chartRef.value.scrollLeft = newScrollLeft
+  chartElement.scrollLeft = clampedScrollLeft
   if (timelineHeaderRef.value) {
-    timelineHeaderRef.value.scrollLeft = newScrollLeft
+    timelineHeaderRef.value.scrollLeft = clampedScrollLeft
   }
   
-  scrollbarThumbLeft.value = clampedLeft
+  // 更新滑块位置以触发日期显示更新
+  updateScrollbarThumbPosition()
   
   nextTick(() => {
     isScrollSyncing.value = false
   })
 }
 
-// 停止拖拽外部滚动条
-function stopScrollbarDrag() {
+// 滚动条拖拽结束
+function endScrollbarDrag() {
   isScrollbarDragging.value = false
-  
   document.removeEventListener('mousemove', onScrollbarDrag)
-  document.removeEventListener('mouseup', stopScrollbarDrag)
+  document.removeEventListener('mouseup', endScrollbarDrag)
+}
+
+// 滚动条点击
+function onScrollbarClick(event: MouseEvent) {
+  if (!chartRef.value || !scrollbarTrackRef.value || !scrollbarThumbRef.value) return
+  if (event.target === scrollbarThumbRef.value) return // 点击滑块时不处理
+  
+  const trackElement = scrollbarTrackRef.value
+  const rect = trackElement.getBoundingClientRect()
+  const clickX = event.clientX - rect.left
+  const trackWidth = trackElement.clientWidth
+  
+  const chartElement = chartRef.value
+  const maxScrollLeft = chartElement.scrollWidth - chartElement.clientWidth
+  const targetScrollLeft = (clickX / trackWidth) * maxScrollLeft
+  
+  isScrollSyncing.value = true
+  chartElement.scrollLeft = targetScrollLeft
+  if (timelineHeaderRef.value) {
+    timelineHeaderRef.value.scrollLeft = targetScrollLeft
+  }
+  
+  updateScrollbarThumbPosition()
+  
+  nextTick(() => {
+    isScrollSyncing.value = false
+  })
 }
 
 // 开始调整大小
@@ -656,26 +817,108 @@ function getTaskBarWidth(task: GanttTask): number {
   return duration * props.cellWidth
 }
 
-// 任务点击事件
-function onTaskClick(task: GanttTask) {
-  emit('task-click', task)
-}
+
 
 // 初始化
 onMounted(() => {
+  // 组件挂载后的初始化逻辑
   nextTick(() => {
-    updateScrollbarPosition()
+    updateScrollbarThumbPosition()
   })
 })
 
+// 时间滚动选择器方法
+function onYearChange() {
+  updateCurrentDate()
+}
+
+function onMonthChange() {
+  // 检查当前日期是否超出新月份的天数范围
+  const maxDays = new Date(currentYear.value, currentMonth.value, 0).getDate()
+  if (currentDay.value > maxDays) {
+    currentDay.value = maxDays
+  }
+  updateCurrentDate()
+}
+
+function onDayChange() {
+  updateCurrentDate()
+}
+
+function updateCurrentDate() {
+  const newDate = new Date(currentYear.value, currentMonth.value - 1, currentDay.value)
+  scrollToDate(newDate)
+}
+
+function goToToday() {
+  const today = new Date()
+  currentYear.value = today.getFullYear()
+  currentMonth.value = today.getMonth() + 1
+  currentDay.value = today.getDate()
+  scrollToDate(today)
+  
+  // 确保滑块位置与步进器同步
+  nextTick(() => {
+    updateScrollbarThumbPosition()
+  })
+}
+
+function resetView() {
+  const today = new Date()
+  currentYear.value = today.getFullYear()
+  currentMonth.value = today.getMonth() + 1
+  currentDay.value = today.getDate()
+  if (chartRef.value && timelineHeaderRef.value) {
+    chartRef.value.scrollLeft = 0
+    timelineHeaderRef.value.scrollLeft = 0
+  }
+}
+
+function scrollToDate(targetDate: Date) {
+  if (!chartRef.value || !timelineHeaderRef.value) return
+  
+  // 找到目标日期在时间轴中的位置
+  const targetTime = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime()
+  const targetItem = timelineData.value.find(item => {
+    const itemTime = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate()).getTime()
+    return itemTime === targetTime
+  })
+  
+  if (targetItem) {
+    const scrollLeft = Math.max(0, targetItem.left - chartRef.value.clientWidth / 2)
+    
+    isScrollSyncing.value = true
+     chartRef.value.scrollLeft = scrollLeft
+     timelineHeaderRef.value.scrollLeft = scrollLeft
+     
+     // 步进器改变后同步更新滑块位置
+     nextTick(() => {
+       updateScrollbarThumbPosition()
+       isScrollSyncing.value = false
+     })
+  }
+}
+
 // 清理事件监听器
+function cleanupEventListeners() {
+  const events = [
+    ['mousemove', onDrag],
+    ['mouseup', endDrag],
+    ['mousemove', onResize],
+    ['mouseup', endResize],
+    ['mousemove', onProgressDrag],
+    ['mouseup', endProgressDrag],
+    ['mousemove', onScrollbarDrag],
+    ['mouseup', endScrollbarDrag]
+  ]
+  
+  events.forEach(([event, handler]) => {
+    document.removeEventListener(event as string, handler as EventListener)
+  })
+}
+
 onUnmounted(() => {
-  document.removeEventListener('mousemove', onDrag)
-  document.removeEventListener('mouseup', endDrag)
-  document.removeEventListener('mousemove', onResize)
-  document.removeEventListener('mouseup', endResize)
-  document.removeEventListener('mousemove', onProgressDrag)
-  document.removeEventListener('mouseup', endProgressDrag)
+  cleanupEventListeners()
 })
 </script>
 
@@ -811,20 +1054,9 @@ onUnmounted(() => {
       overflow-y: auto;
       max-height: 400px;
       
-      /* Firefox - 隐藏滚动条 */
+      /* 隐藏滚动条 */
       scrollbar-width: none;
-      
-      /* Webkit浏览器 - 隐藏滚动条 */
       &::-webkit-scrollbar {
-        width: 0;
-        display: none;
-      }
-      
-      &::-webkit-scrollbar-track {
-        display: none;
-      }
-      
-      &::-webkit-scrollbar-thumb {
         display: none;
       }
       
@@ -864,21 +1096,9 @@ onUnmounted(() => {
       overflow-y: auto;
       max-height: 400px;
       
-      /* Firefox - 隐藏滚动条 */
+      /* 隐藏滚动条 */
       scrollbar-width: none;
-      
-      /* Webkit浏览器 - 隐藏滚动条 */
       &::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-        display: none;
-      }
-      
-      &::-webkit-scrollbar-track {
-        display: none;
-      }
-      
-      &::-webkit-scrollbar-thumb {
         display: none;
       }
       
@@ -1027,58 +1247,277 @@ onUnmounted(() => {
   }
 }
 
-// 滚动条样式
-.gantt-chart::-webkit-scrollbar,
-.gantt-timeline-header::-webkit-scrollbar {
-  height: 6px;
-}
 
-.gantt-chart::-webkit-scrollbar-track,
-.gantt-timeline-header::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
 
-.gantt-chart::-webkit-scrollbar-thumb,
-.gantt-timeline-header::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.gantt-chart::-webkit-scrollbar-thumb:hover,
-.gantt-timeline-header::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* 外部滚动条样式 */
-.gantt-external-scrollbar {
-  height: 12px;
-  background: #f5f7fa;
-  border-top: 1px solid #e4e7ed;
+/* 带时间标记的滚动条样式 */
+.gantt-timeline-scrollbar {
+  height: 50px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: flex-start;
   position: relative;
-  
-  .scrollbar-track {
+  padding-top: 10px;
+}
+
+.scrollbar-container {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  padding: 0 10px;
+}
+
+.scrollbar-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: visible;
+  margin-bottom: 2px;
+}
+
+.scrollbar-thumb {
+  position: absolute;
+  top: -4px;
+  height: 16px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 12px solid #409eff;
+  cursor: grab;
+  transition: border-bottom-color 0.2s ease;
+  transform: translateX(-50%);
+}
+
+.scrollbar-thumb:hover {
+  border-bottom-color: #337ecc;
+}
+
+.scrollbar-thumb:active {
+  cursor: grabbing;
+  border-bottom-color: #2b6cb0;
+}
+
+.thumb-date-label {
+  position: absolute;
+  top: 16px;
+  font-size: 10px;
+  color: #606266;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #e4e7ed;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: transform 0.2s ease, left 0.2s ease;
+}
+
+.timeline-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+.timeline-mark {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mark-line {
+  width: 1px;
+  background: #909399;
+  margin-bottom: 2px;
+}
+
+.mark-label {
+  font-size: 10px;
+  color: #606266;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+}
+
+.timeline-mark.day {
+  .mark-line {
     height: 100%;
-    position: relative;
-    background: #f0f0f0;
-    
-    .scrollbar-thumb {
-      position: absolute;
-      top: 2px;
-      height: 8px;
-      background: #c1c1c1;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      
-      &:hover {
-        background: #a8a8a8;
-      }
-      
-      &:active {
-        background: #909090;
-      }
-    }
+    width: 1px;
+    background: #909399;
   }
+}
+
+/* 年份颜色循环 */
+.timeline-mark[data-year] .mark-line {
+  background: #909399;
+}
+
+.timeline-mark[data-year="2024"] .mark-line,
+.timeline-mark[data-year="2029"] .mark-line {
+  background: #e6a23c;
+}
+
+.timeline-mark[data-year="2025"] .mark-line,
+.timeline-mark[data-year="2030"] .mark-line {
+  background: #67c23a;
+}
+
+.timeline-mark[data-year="2026"] .mark-line {
+  background: #409eff;
+}
+
+.timeline-mark[data-year="2027"] .mark-line {
+  background: #f56c6c;
+}
+
+/* 时间滚动选择器样式 */
+.gantt-time-scroller {
+  height: auto;
+  min-height: 180px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  align-items: stretch;
+}
+
+.scroller-controls {
+  display: flex;
+  width: 100%;
+  padding: 15px;
+}
+
+.scroller-vertical-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+.scroller-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+}
+
+.scroller-group label {
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+.scroller-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  width: 100%;
+}
+
+.time-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #e9ecef;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.time-slider::-webkit-slider-thumb:hover {
+  background: #0056b3;
+  transform: scale(1.1);
+}
+
+.time-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.year-slider {
+  background: linear-gradient(to right, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.month-slider {
+  background: linear-gradient(to right, #f3e5f5 0%, #ce93d8 100%);
+}
+
+.day-slider {
+  background: linear-gradient(to right, #e8f5e8 0%, #a5d6a7 100%);
+}
+
+.scroller-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 14px;
+  color: #212529;
+  font-weight: 600;
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.scroller-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  background: #007bff;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.action-btn:active {
+  background: #0056b3;
+  border-color: #0056b3;
+  transform: translateY(0);
 }
 </style>

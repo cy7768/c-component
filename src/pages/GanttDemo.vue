@@ -18,7 +18,7 @@
         :cell-width="80"
         :row-height="50"
         :columns="ganttColumns"
-        :task-bar-height="16"
+        :task-bar-height="30"
         @task-update="onTaskUpdate"
         @task-click="onTaskClick"
       />
@@ -33,6 +33,8 @@
         <li>支持自定义任务颜色和进度</li>
         <li>支持自定义显示字段（任务名称、开始时间、结束时间、进度等）</li>
         <li>三层时间轴显示（年-月-日）</li>
+        <li>时间滚动选择器：支持通过滑动条按年、月、日精确选择时间</li>
+        <li>快捷操作：一键回到今天、重置视图</li>
         <li>响应式设计，支持滚动查看</li>
       </ul>
     </div>
@@ -96,7 +98,7 @@ function initTasks() {
   const baseDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   
   startDate.value = new Date(baseDate)
-  endDate.value = new Date(baseDate.getTime() + 730 * 24 * 60 * 60 * 1000) // 2年后
+  endDate.value = new Date(baseDate.getTime() + 1450 * 24 * 60 * 60 * 1000) // 2年后
   
   tasks.value = [
     {
