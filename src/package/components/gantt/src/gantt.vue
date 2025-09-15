@@ -211,25 +211,11 @@
               :class="`year-block-${yearGroups.findIndex(g => g.year === yearGroup.year) % 4}`"
               :style="{ left: yearGroup.startLeft + 'px', width: yearGroup.width + 'px' }"
             >
-              <div class="year-label">{{ yearGroup.year }}</div>
+              <div class="year-label">{{ currentThumbDate }}</div>
             </div>
           </div>
           
           <div class="scrollbar-thumb" ref="scrollbarThumbRef" @mousedown="startScrollbarDrag">
-            <div class="thumb-date-label" :style="thumbDateLabelStyle">{{ currentThumbDate }}</div>
-          </div>
-          <!-- 按天显示的时间刻度标记 -->
-          <div class="timeline-marks" :style="{ width: totalWidth + 'px' }">
-            <div 
-              v-for="mark in timelineMarks" 
-              :key="mark.key"
-              class="timeline-mark"
-              :class="[`year-${mark.year}`]"
-              :style="{ left: mark.left + 'px' }"
-              :data-year="mark.year"
-            >
-              <div class="mark-line"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -376,9 +362,11 @@ function getDateFromThumbPosition(): Date | null {
   }
   
   const chartElement = chartRef.value
-  const currentScrollLeft = chartElement.scrollLeft
+  // 确保滚动位置在有效边界内
+  const maxScrollLeft = chartElement.scrollWidth - chartElement.clientWidth
+  const currentScrollLeft = Math.max(0, Math.min(maxScrollLeft, chartElement.scrollLeft))
   
-  // 根据当前滚动位置计算对应的日期
+  // 根据边界限制后的滚动位置计算对应的日期
   const targetPixelPosition = currentScrollLeft
   
   // 查找最接近的日期
@@ -396,62 +384,29 @@ function getDateFromThumbPosition(): Date | null {
   return closestDate
 }
 
-// 计算当前滑块指示的日期（拖拽时显示实际位置，非拖拽时显示步进器配置）
+// 计算当前滑块指示的日期（始终显示滑块实际指示的时间）
 const currentThumbDate = computed(() => {
   // 验证时间轴数据是否存在
   if (timelineData.value.length === 0) {
     return ''
   }
   
-  // 如果正在拖拽滚动条，显示滑块实际指示的日期
-  if (isScrollbarDragging.value) {
-    const thumbDate = getDateFromThumbPosition()
-    if (thumbDate) {
-      const year = thumbDate.getFullYear()
-      const month = thumbDate.getMonth() + 1
-      const day = thumbDate.getDate()
-      return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
-    }
+  // 添加对scrollPosition的响应式依赖，确保滑块位置变化时重新计算
+  scrollPosition.value // 触发响应式依赖
+  
+  // 始终显示滑块实际指示的日期
+  const thumbDate = getDateFromThumbPosition()
+  if (thumbDate) {
+    const year = thumbDate.getFullYear()
+    const month = thumbDate.getMonth() + 1
+    const day = thumbDate.getDate()
+    return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
   }
   
-  // 非拖拽状态，显示步进器配置的日期
-  const year = currentYear.value
-  const month = currentMonth.value
-  const day = currentDay.value
-  
-  // 检查步进器配置的日期是否在时间轴中存在
-  const targetTime = new Date(year, month - 1, day).getTime()
-  const hasData = timelineData.value.some(item => {
-    const itemTime = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate()).getTime()
-    return itemTime === targetTime
-  })
-  
-  // 如果没有数据则忽略（返回空字符串）
-  if (!hasData) {
-    return ''
-  }
-  
-  // 格式化显示步进器配置的日期
-  return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
+  return ''
 })
 
-// 计算滑块日期标签的定位样式
-const thumbDateLabelStyle = computed(() => {
-  if (!scrollbarTrackRef.value) return {}
-  
-  const trackWidth = scrollbarTrackRef.value.clientWidth
-  const thumbCenter = thumbPosition.value.left + thumbPosition.value.width / 2
-  const labelHalfWidth = 40 // 标签宽度的一半
-  
-  // 边界检查和样式计算
-  if (thumbCenter > trackWidth - labelHalfWidth) {
-    return { transform: 'translateX(-100%)', left: '100%' }
-  } else if (thumbCenter < labelHalfWidth) {
-    return { transform: 'translateX(0)', left: '0%' }
-  }
-  
-  return { transform: 'translateX(-50%)', left: '50%' }
-})
+
 
 // 时间刻度标记计算
 const timelineMarks = computed(() => {
@@ -831,8 +786,11 @@ function updateScrollbarThumbPosition() {
       const thumbWidth = (chartElement.clientWidth / chartElement.scrollWidth) * trackElement.clientWidth
       let thumbLeft = scrollRatio * (trackElement.clientWidth - thumbWidth)
       
-      // 边界检查：确保滑块不会超过右侧面板边界
-      const maxThumbLeft = trackElement.clientWidth - thumbWidth
+      // 滑块实际视觉宽度（三角形样式：左右各8px边框）
+      const thumbVisualWidth = 16
+      
+      // 边界检查：确保滑块不会超过轨道边界
+      const maxThumbLeft = trackElement.clientWidth - thumbVisualWidth
       thumbLeft = Math.max(0, Math.min(maxThumbLeft, thumbLeft))
       
       // 使用transform代替直接修改left属性，提升性能
@@ -1602,7 +1560,7 @@ onUnmounted(() => {
 
 /* 带时间标记的滚动条样式 */
 .gantt-timeline-scrollbar {
-  height: 55px;
+  height: 30px;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;
   display: flex;
@@ -1647,7 +1605,7 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   padding-left: 8px;
   border-right: 1px solid rgba(255, 255, 255, 0.3);
   min-width: 60px;
@@ -1684,7 +1642,7 @@ onUnmounted(() => {
 
 .scrollbar-thumb {
   position: absolute;
-  top: 16px;
+  top: 15px;
   height: 16px;
   width: 0 !important;
   height: 0;
@@ -1706,21 +1664,7 @@ onUnmounted(() => {
   border-bottom-color: #2b6cb0;
 }
 
-.thumb-date-label {
-  position: absolute;
-  top: 16px;
-  font-size: 10px;
-  color: #606266;
-  background: rgba(255, 255, 255, 0.95);
-  padding: 2px 6px;
-  border-radius: 3px;
-  border: 1px solid #e4e7ed;
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-  z-index: 15;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, left;
-}
+
 
 .timeline-marks {
   position: absolute;
