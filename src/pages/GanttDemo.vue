@@ -97,7 +97,7 @@ function initTasks() {
   const today = new Date()
   const baseDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   
-  startDate.value = new Date(baseDate)
+  startDate.value = new Date('2000-01-01')
   endDate.value = new Date(baseDate.getTime() + 1450 * 24 * 60 * 60 * 1000) // 2年后
   
   tasks.value = [

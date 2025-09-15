@@ -1,8 +1,65 @@
 <template>
   <div class="c-gantt">
+    <!-- 时间滚动选择器 - 移到顶部并改为横向布局 -->
+    <div class="gantt-time-scroller">
+      <div class="scroller-controls">
+        <div class="scroller-horizontal-layout">
+          <div class="scroller-group">
+            <label>年:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                :min="minYear" 
+                :max="maxYear" 
+                v-model="currentYear" 
+                @input="onYearChange"
+                class="time-slider year-slider"
+              />
+              <span class="scroller-value">{{ currentYear }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-group">
+            <label>月:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                min="1" 
+                max="12" 
+                v-model="currentMonth" 
+                @input="onMonthChange"
+                class="time-slider month-slider"
+              />
+              <span class="scroller-value">{{ currentMonth }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-group">
+            <label>日:</label>
+            <div class="scroller-wrapper">
+              <input 
+                type="range" 
+                min="1" 
+                :max="daysInCurrentMonth" 
+                v-model="currentDay" 
+                @input="onDayChange"
+                class="time-slider day-slider"
+              />
+              <span class="scroller-value">{{ currentDay }}</span>
+            </div>
+          </div>
+          
+          <div class="scroller-actions">
+            <button @click="goToToday" class="action-btn">今天</button>
+            <button @click="resetView" class="action-btn">重置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 头部时间轴 -->
     <div class="gantt-header">
-      <div class="gantt-sidebar-header">
+      <div class="gantt-sidebar-header" :style="{ width: sidebarWidth + 'px' }">
         <div 
           v-for="column in props.columns" 
           :key="column.key"
@@ -12,6 +69,10 @@
           {{ column.label }}
         </div>
       </div>
+      
+      <!-- 分隔线占位空间 -->
+      <div class="gantt-header-spacer"></div>
+      
       <div class="gantt-timeline-header" ref="timelineHeaderRef" @scroll="onTimelineScroll">
         <!-- 年份层 -->
         <div class="timeline-year-row" :style="{ width: totalWidth + 'px' }">
@@ -54,7 +115,7 @@
     <!-- 主体内容 -->
     <div class="gantt-body">
       <!-- 左侧任务列表 -->
-      <div class="gantt-sidebar" ref="sidebarRef" @scroll="onSidebarScroll">
+      <div class="gantt-sidebar" ref="sidebarRef" @scroll="onSidebarScroll" :style="{ width: sidebarWidth + 'px' }">
         <div 
           v-for="task in tasks" 
           :key="task.id"
@@ -70,6 +131,15 @@
             {{ getColumnValue(task, column) }}
           </div>
         </div>
+      </div>
+      
+      <!-- 可拖拽的分隔线 -->
+      <div 
+        class="gantt-resizer" 
+        @mousedown="startSidebarResize"
+        :class="{ 'resizing': isResizing }"
+      >
+        <div class="resizer-handle"></div>
       </div>
       
       <!-- 右侧甘特图区域 -->
@@ -132,6 +202,19 @@
     <div class="gantt-timeline-scrollbar">
       <div class="scrollbar-container" :style="{ marginLeft: sidebarWidth + 'px' }">
         <div class="scrollbar-track" ref="scrollbarTrackRef" @click="onScrollbarClick">
+          <!-- 年份背景分块 -->
+          <div class="year-blocks">
+            <div 
+              v-for="(yearGroup, index) in visibleYearGroups" 
+              :key="'year-block-' + yearGroup.year"
+              class="year-block"
+              :class="`year-block-${yearGroups.findIndex(g => g.year === yearGroup.year) % 4}`"
+              :style="{ left: yearGroup.startLeft + 'px', width: yearGroup.width + 'px' }"
+            >
+              <div class="year-label">{{ yearGroup.year }}</div>
+            </div>
+          </div>
+          
           <div class="scrollbar-thumb" ref="scrollbarThumbRef" @mousedown="startScrollbarDrag">
             <div class="thumb-date-label" :style="thumbDateLabelStyle">{{ currentThumbDate }}</div>
           </div>
@@ -141,7 +224,7 @@
               v-for="mark in timelineMarks" 
               :key="mark.key"
               class="timeline-mark"
-              :class="[mark.type, `year-${mark.year}`]"
+              :class="[`year-${mark.year}`]"
               :style="{ left: mark.left + 'px' }"
               :data-year="mark.year"
             >
@@ -152,62 +235,6 @@
       </div>
     </div>
     
-    <!-- 时间滚动选择器 -->
-    <div class="gantt-time-scroller">
-      <div class="scroller-controls" :style="{ marginLeft: sidebarWidth + 'px' }">
-        <div class="scroller-vertical-layout">
-          <div class="scroller-group">
-            <label>年:</label>
-            <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                :min="minYear" 
-                :max="maxYear" 
-                v-model="currentYear" 
-                @input="onYearChange"
-                class="time-slider year-slider"
-              />
-              <span class="scroller-value">{{ currentYear }}</span>
-            </div>
-          </div>
-          
-          <div class="scroller-group">
-            <label>月:</label>
-            <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                min="1" 
-                max="12" 
-                v-model="currentMonth" 
-                @input="onMonthChange"
-                class="time-slider month-slider"
-              />
-              <span class="scroller-value">{{ currentMonth }}</span>
-            </div>
-          </div>
-          
-          <div class="scroller-group">
-            <label>日:</label>
-            <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                min="1" 
-                :max="daysInCurrentMonth" 
-                v-model="currentDay" 
-                @input="onDayChange"
-                class="time-slider day-slider"
-              />
-              <span class="scroller-value">{{ currentDay }}</span>
-            </div>
-          </div>
-          
-          <div class="scroller-actions">
-            <button @click="goToToday" class="action-btn">今天</button>
-            <button @click="resetView" class="action-btn">重置</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -342,17 +369,55 @@ const daysInCurrentMonth = computed(() => {
   return new Date(currentYear.value, currentMonth.value, 0).getDate()
 })
 
-// 计算当前滑块指示的日期（严格按照步进器配置）
-const currentThumbDate = computed(() => {
-  // 直接使用步进器的年月日值，不依赖滑块位置计算
-  const year = currentYear.value
-  const month = currentMonth.value
-  const day = currentDay.value
+// 根据滑块位置计算对应的日期
+function getDateFromThumbPosition(): Date | null {
+  if (!chartRef.value || !scrollbarTrackRef.value || timelineData.value.length === 0) {
+    return null
+  }
   
-  // 验证日期是否在时间轴数据范围内
+  const chartElement = chartRef.value
+  const currentScrollLeft = chartElement.scrollLeft
+  
+  // 根据当前滚动位置计算对应的日期
+  const targetPixelPosition = currentScrollLeft
+  
+  // 查找最接近的日期
+  let closestDate = timelineData.value[0].date
+  let minDistance = Math.abs(timelineData.value[0].left - targetPixelPosition)
+  
+  for (const item of timelineData.value) {
+    const distance = Math.abs(item.left - targetPixelPosition)
+    if (distance < minDistance) {
+      minDistance = distance
+      closestDate = item.date
+    }
+  }
+  
+  return closestDate
+}
+
+// 计算当前滑块指示的日期（拖拽时显示实际位置，非拖拽时显示步进器配置）
+const currentThumbDate = computed(() => {
+  // 验证时间轴数据是否存在
   if (timelineData.value.length === 0) {
     return ''
   }
+  
+  // 如果正在拖拽滚动条，显示滑块实际指示的日期
+  if (isScrollbarDragging.value) {
+    const thumbDate = getDateFromThumbPosition()
+    if (thumbDate) {
+      const year = thumbDate.getFullYear()
+      const month = thumbDate.getMonth() + 1
+      const day = thumbDate.getDate()
+      return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
+    }
+  }
+  
+  // 非拖拽状态，显示步进器配置的日期
+  const year = currentYear.value
+  const month = currentMonth.value
+  const day = currentDay.value
   
   // 检查步进器配置的日期是否在时间轴中存在
   const targetTime = new Date(year, month - 1, day).getTime()
@@ -397,9 +462,32 @@ const timelineMarks = computed(() => {
   }))
 })
 
+// 响应式的侧边栏宽度
+const dynamicSidebarWidth = ref(0)
+
+// 拖拽相关状态
+const isResizing = ref(false)
+const startX = ref(0)
+const startWidth = ref(0)
+const resizeAnimationFrame = ref<number | null>(null)
+const dragAnimationFrame = ref<number | null>(null)
+const progressAnimationFrame = ref<number | null>(null)
+const scrollAnimationFrame = ref<number | null>(null)
+const thumbUpdateAnimationFrame = ref<number | null>(null)
+
+// 宽度限制
+const minSidebarWidth = 200
+const maxSidebarWidth = 800
+
 // 计算左侧边栏宽度
 const sidebarWidth = computed(() => {
-  return props.columns.reduce((sum, col) => sum + (col.width || 200), 0)
+  const defaultWidth = props.columns.reduce((sum, col) => sum + (col.width || 200), 0)
+  return dynamicSidebarWidth.value || defaultWidth
+})
+
+// 初始化动态宽度
+onMounted(() => {
+  dynamicSidebarWidth.value = props.columns.reduce((sum, col) => sum + (col.width || 200), 0)
 })
 
 // 计算任务条高度（带限制）
@@ -461,6 +549,36 @@ const yearGroups = computed<YearGroup[]>(() => {
   })
   
   return groups.sort((a, b) => a.year - b.year)
+})
+
+// 滚动位置状态（用于触发年份分块更新）
+const scrollPosition = ref(0)
+
+// 计算可见的年份分块（基于滚动位置）
+const visibleYearGroups = computed<YearGroup[]>(() => {
+  // 使用scrollPosition来确保响应式更新
+  const currentScrollLeft = scrollPosition.value
+  
+  if (!chartRef.value || !scrollbarTrackRef.value) return yearGroups.value
+  
+  const trackWidth = scrollbarTrackRef.value.clientWidth || 0
+  
+  return yearGroups.value.map(yearGroup => {
+    // 计算年份分块在滚动条轨道中的相对位置
+    const relativeLeft = yearGroup.startLeft - currentScrollLeft
+    const relativeWidth = yearGroup.width
+    
+    // 只显示在可视区域内的年份分块
+    if (relativeLeft + relativeWidth > 0 && relativeLeft < trackWidth) {
+      return {
+        ...yearGroup,
+        startLeft: Math.max(0, relativeLeft),
+        width: Math.min(relativeWidth, trackWidth - Math.max(0, relativeLeft))
+      }
+    }
+    
+    return null
+  }).filter(Boolean) as YearGroup[]
 })
 
 // 计算月份分组
@@ -569,8 +687,16 @@ function onDrag(event: MouseEvent) {
     const duration = draggingTask.value.endDate.getTime() - draggingTask.value.startDate.getTime()
     const newEndDate = new Date(newStartDate.getTime() + duration)
     
-    draggingTask.value.startDate = newStartDate
-    draggingTask.value.endDate = newEndDate
+    // 使用requestAnimationFrame优化性能
+    if (!dragAnimationFrame.value) {
+      dragAnimationFrame.value = requestAnimationFrame(() => {
+        if (draggingTask.value) {
+          draggingTask.value.startDate = newStartDate
+          draggingTask.value.endDate = newEndDate
+        }
+        dragAnimationFrame.value = null
+      })
+    }
   }
 }
 
@@ -581,8 +707,63 @@ function endDrag() {
     draggingTask.value = null
   }
   
+  // 清理动画帧
+  if (dragAnimationFrame.value) {
+    cancelAnimationFrame(dragAnimationFrame.value)
+    dragAnimationFrame.value = null
+  }
+  
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', endDrag)
+}
+
+// 开始侧边栏宽度调整
+function startSidebarResize(event: MouseEvent) {
+  isResizing.value = true
+  startX.value = event.clientX
+  startWidth.value = sidebarWidth.value
+  
+  document.addEventListener('mousemove', onSidebarResize)
+  document.addEventListener('mouseup', endSidebarResize)
+  
+  // 防止文本选择
+  event.preventDefault()
+}
+
+// 侧边栏宽度调整过程
+function onSidebarResize(event: MouseEvent) {
+  if (!isResizing.value) return
+  
+  const deltaX = event.clientX - startX.value
+  const newWidth = startWidth.value + deltaX
+  
+  // 应用宽度限制
+  const clampedWidth = Math.max(minSidebarWidth, Math.min(maxSidebarWidth, newWidth))
+  
+  // 使用requestAnimationFrame优化性能
+  if (!resizeAnimationFrame.value) {
+    resizeAnimationFrame.value = requestAnimationFrame(() => {
+      dynamicSidebarWidth.value = clampedWidth
+      resizeAnimationFrame.value = null
+    })
+  }
+}
+
+// 结束侧边栏宽度调整
+function endSidebarResize() {
+  isResizing.value = false
+  
+  // 清理未完成的动画帧
+  if (resizeAnimationFrame.value) {
+    cancelAnimationFrame(resizeAnimationFrame.value)
+    resizeAnimationFrame.value = null
+  }
+  
+  // 拖拽结束后更新滚动滑块位置，避免拖拽过程中的频繁更新
+  updateScrollbarThumbPosition()
+  
+  document.removeEventListener('mousemove', onSidebarResize)
+  document.removeEventListener('mouseup', endSidebarResize)
 }
 
 // 同步滚动 - 时间轴头部滚动时同步甘特图主体
@@ -633,23 +814,39 @@ function onSidebarScroll() {
 function updateScrollbarThumbPosition() {
   if (!chartRef.value || !scrollbarTrackRef.value || !scrollbarThumbRef.value) return
   
-  const chartElement = chartRef.value
-  const trackElement = scrollbarTrackRef.value
-  const thumbElement = scrollbarThumbRef.value
-  
-  // 计算滚动条滑块的位置和大小
-  const scrollRatio = chartElement.scrollLeft / (chartElement.scrollWidth - chartElement.clientWidth)
-  const thumbWidth = (chartElement.clientWidth / chartElement.scrollWidth) * trackElement.clientWidth
-  const thumbLeft = scrollRatio * (trackElement.clientWidth - thumbWidth)
-  
-  // 更新DOM样式
-  thumbElement.style.width = thumbWidth + 'px'
-  thumbElement.style.left = thumbLeft + 'px'
-  
-  // 更新响应式状态以触发日期显示更新
-  thumbPosition.value = { left: thumbLeft, width: thumbWidth }
-  
-  // 滑块位置仅用于显示，不更新步进器值（以步进器数据为准）
+  // 使用requestAnimationFrame节流，避免频繁更新导致颤抖
+  if (!thumbUpdateAnimationFrame.value) {
+    thumbUpdateAnimationFrame.value = requestAnimationFrame(() => {
+      if (!chartRef.value || !scrollbarTrackRef.value || !scrollbarThumbRef.value) {
+        thumbUpdateAnimationFrame.value = null
+        return
+      }
+      
+      const chartElement = chartRef.value
+      const trackElement = scrollbarTrackRef.value
+      const thumbElement = scrollbarThumbRef.value
+      
+      // 计算滚动条滑块的位置和大小
+      const scrollRatio = chartElement.scrollLeft / (chartElement.scrollWidth - chartElement.clientWidth)
+      const thumbWidth = (chartElement.clientWidth / chartElement.scrollWidth) * trackElement.clientWidth
+      let thumbLeft = scrollRatio * (trackElement.clientWidth - thumbWidth)
+      
+      // 边界检查：确保滑块不会超过右侧面板边界
+      const maxThumbLeft = trackElement.clientWidth - thumbWidth
+      thumbLeft = Math.max(0, Math.min(maxThumbLeft, thumbLeft))
+      
+      // 使用transform代替直接修改left属性，提升性能
+      // 直接计算最终位置，避免复杂的transform计算
+      thumbElement.style.width = thumbWidth + 'px'
+      thumbElement.style.transform = `translateX(${thumbLeft}px)`
+      
+      // 更新响应式状态以触发日期显示更新和年份分块更新
+      thumbPosition.value = { left: thumbLeft, width: thumbWidth }
+      scrollPosition.value = chartElement.scrollLeft
+      
+      thumbUpdateAnimationFrame.value = null
+    })
+  }
 }
 
 // 滚动条拖拽开始
@@ -676,26 +873,43 @@ function onScrollbarDrag(event: MouseEvent) {
   const maxScrollLeft = chartElement.scrollWidth - chartElement.clientWidth
   const newScrollLeft = scrollbarDragStartScrollLeft.value + (scrollRatio * maxScrollLeft)
   
-  // 限制滚动范围
-  const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, newScrollLeft))
+  // 计算步进器设置的日期对应的最小滚动位置
+  const stepperDate = new Date(currentYear.value, currentMonth.value - 1, currentDay.value)
+  const minScrollLeft = getDatePixelPosition(stepperDate)
   
-  isScrollSyncing.value = true
-  chartElement.scrollLeft = clampedScrollLeft
-  if (timelineHeaderRef.value) {
-    timelineHeaderRef.value.scrollLeft = clampedScrollLeft
+  // 限制滚动范围：不能滑动到步进器时间之前，且不能超过最大滚动范围
+  const clampedScrollLeft = Math.max(minScrollLeft, Math.min(maxScrollLeft, newScrollLeft))
+  
+  // 使用requestAnimationFrame优化滚动性能
+  if (!scrollAnimationFrame.value) {
+    scrollAnimationFrame.value = requestAnimationFrame(() => {
+      if (chartRef.value && timelineHeaderRef.value) {
+        isScrollSyncing.value = true
+        chartRef.value.scrollLeft = clampedScrollLeft
+        timelineHeaderRef.value.scrollLeft = clampedScrollLeft
+        
+        // 更新滑块位置以触发日期显示更新
+        updateScrollbarThumbPosition()
+        
+        nextTick(() => {
+          isScrollSyncing.value = false
+        })
+      }
+      scrollAnimationFrame.value = null
+    })
   }
-  
-  // 更新滑块位置以触发日期显示更新
-  updateScrollbarThumbPosition()
-  
-  nextTick(() => {
-    isScrollSyncing.value = false
-  })
 }
 
 // 滚动条拖拽结束
 function endScrollbarDrag() {
   isScrollbarDragging.value = false
+  
+  // 清理滚动动画帧
+  if (scrollAnimationFrame.value) {
+    cancelAnimationFrame(scrollAnimationFrame.value)
+    scrollAnimationFrame.value = null
+  }
+  
   document.removeEventListener('mousemove', onScrollbarDrag)
   document.removeEventListener('mouseup', endScrollbarDrag)
 }
@@ -714,10 +928,17 @@ function onScrollbarClick(event: MouseEvent) {
   const maxScrollLeft = chartElement.scrollWidth - chartElement.clientWidth
   const targetScrollLeft = (clickX / trackWidth) * maxScrollLeft
   
+  // 计算步进器设置的日期对应的最小滚动位置
+  const stepperDate = new Date(currentYear.value, currentMonth.value - 1, currentDay.value)
+  const minScrollLeft = getDatePixelPosition(stepperDate)
+  
+  // 限制滚动范围：不能滑动到步进器时间之前
+  const clampedTargetScrollLeft = Math.max(minScrollLeft, Math.min(maxScrollLeft, targetScrollLeft))
+  
   isScrollSyncing.value = true
-  chartElement.scrollLeft = targetScrollLeft
+  chartElement.scrollLeft = clampedTargetScrollLeft
   if (timelineHeaderRef.value) {
-    timelineHeaderRef.value.scrollLeft = targetScrollLeft
+    timelineHeaderRef.value.scrollLeft = clampedTargetScrollLeft
   }
   
   updateScrollbarThumbPosition()
@@ -797,7 +1018,15 @@ function onProgressDrag(event: MouseEvent) {
   let newProgress = dragStartProgress.value + progressDelta
   newProgress = Math.max(0, Math.min(100, newProgress)) // 限制在0-100之间
   
-  progressDragging.value.progress = Math.round(newProgress)
+  // 使用requestAnimationFrame优化性能
+  if (!progressAnimationFrame.value) {
+    progressAnimationFrame.value = requestAnimationFrame(() => {
+      if (progressDragging.value) {
+        progressDragging.value.progress = Math.round(newProgress)
+      }
+      progressAnimationFrame.value = null
+    })
+  }
 }
 
 // 结束拖拽进度
@@ -805,6 +1034,12 @@ function endProgressDrag() {
   if (progressDragging.value) {
     emit('task-update', { ...progressDragging.value })
     progressDragging.value = null
+  }
+  
+  // 清理动画帧
+  if (progressAnimationFrame.value) {
+    cancelAnimationFrame(progressAnimationFrame.value)
+    progressAnimationFrame.value = null
   }
   
   document.removeEventListener('mousemove', onProgressDrag)
@@ -823,7 +1058,9 @@ function getTaskBarWidth(task: GanttTask): number {
 onMounted(() => {
   // 组件挂载后的初始化逻辑
   nextTick(() => {
-    updateScrollbarThumbPosition()
+    // 初始化时滑块位置为步进器设置的时间位置
+    const stepperDate = new Date(currentYear.value, currentMonth.value - 1, currentDay.value)
+    scrollToDate(stepperDate)
   })
 })
 
@@ -848,6 +1085,11 @@ function onDayChange() {
 function updateCurrentDate() {
   const newDate = new Date(currentYear.value, currentMonth.value - 1, currentDay.value)
   scrollToDate(newDate)
+  
+  // 确保步进器变化时立即同步滑块位置
+  nextTick(() => {
+    updateScrollbarThumbPosition()
+  })
 }
 
 function goToToday() {
@@ -874,29 +1116,65 @@ function resetView() {
   }
 }
 
+// 获取日期对应的像素位置
+function getDatePixelPosition(targetDate: Date): number {
+  const targetTime = targetDate.getTime()
+  
+  // 在时间轴数据中查找目标日期
+  for (let i = 0; i < timelineData.value.length; i++) {
+    const item = timelineData.value[i]
+    const itemTime = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate()).getTime()
+    
+    if (itemTime === targetTime) {
+      return item.left
+    }
+  }
+  
+  // 如果没有找到精确匹配，返回最接近的位置
+  let closestIndex = 0
+  let minDiff = Math.abs(timelineData.value[0].date.getTime() - targetTime)
+  
+  for (let i = 1; i < timelineData.value.length; i++) {
+    const diff = Math.abs(timelineData.value[i].date.getTime() - targetTime)
+    if (diff < minDiff) {
+      minDiff = diff
+      closestIndex = i
+    }
+  }
+  
+  return timelineData.value[closestIndex].left
+}
+
+// 对齐滚动位置到日期边界
+function alignScrollToDateBoundary(scrollLeft: number): number {
+  // 将滚动位置对齐到最近的日期边界（cellWidth的倍数）
+  return Math.round(scrollLeft / props.cellWidth) * props.cellWidth
+}
+
 function scrollToDate(targetDate: Date) {
   if (!chartRef.value || !timelineHeaderRef.value) return
   
-  // 找到目标日期在时间轴中的位置
-  const targetTime = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate()).getTime()
-  const targetItem = timelineData.value.find(item => {
-    const itemTime = new Date(item.date.getFullYear(), item.date.getMonth(), item.date.getDate()).getTime()
-    return itemTime === targetTime
-  })
+  // 使用精确的日期到像素位置映射
+  const targetPixelPosition = getDatePixelPosition(targetDate)
+  const scrollLeft = Math.max(0, targetPixelPosition)
   
-  if (targetItem) {
-    const scrollLeft = Math.max(0, targetItem.left - chartRef.value.clientWidth / 2)
-    
-    isScrollSyncing.value = true
-     chartRef.value.scrollLeft = scrollLeft
-     timelineHeaderRef.value.scrollLeft = scrollLeft
-     
-     // 步进器改变后同步更新滑块位置
-     nextTick(() => {
-       updateScrollbarThumbPosition()
-       isScrollSyncing.value = false
-     })
-  }
+  // 对齐到日期边界确保精确定位
+  const alignedScrollLeft = alignScrollToDateBoundary(scrollLeft)
+  const maxScrollLeft = chartRef.value.scrollWidth - chartRef.value.clientWidth
+  const clampedScrollLeft = Math.max(0, Math.min(maxScrollLeft, alignedScrollLeft))
+  
+  isScrollSyncing.value = true
+  chartRef.value.scrollLeft = clampedScrollLeft
+  timelineHeaderRef.value.scrollLeft = clampedScrollLeft
+  
+  // 立即更新滑块位置
+  updateScrollbarThumbPosition()
+  
+  // 步进器改变后再次确保滑块位置同步
+  nextTick(() => {
+    updateScrollbarThumbPosition()
+    isScrollSyncing.value = false
+  })
 }
 
 // 清理事件监听器
@@ -909,7 +1187,9 @@ function cleanupEventListeners() {
     ['mousemove', onProgressDrag],
     ['mouseup', endProgressDrag],
     ['mousemove', onScrollbarDrag],
-    ['mouseup', endScrollbarDrag]
+    ['mouseup', endScrollbarDrag],
+    ['mousemove', onSidebarResize],
+    ['mouseup', endSidebarResize]
   ]
   
   events.forEach(([event, handler]) => {
@@ -919,6 +1199,28 @@ function cleanupEventListeners() {
 
 onUnmounted(() => {
   cleanupEventListeners()
+  
+  // 清理所有动画帧
+  if (resizeAnimationFrame.value) {
+    cancelAnimationFrame(resizeAnimationFrame.value)
+    resizeAnimationFrame.value = null
+  }
+  if (dragAnimationFrame.value) {
+    cancelAnimationFrame(dragAnimationFrame.value)
+    dragAnimationFrame.value = null
+  }
+  if (progressAnimationFrame.value) {
+    cancelAnimationFrame(progressAnimationFrame.value)
+    progressAnimationFrame.value = null
+  }
+  if (scrollAnimationFrame.value) {
+    cancelAnimationFrame(scrollAnimationFrame.value)
+    scrollAnimationFrame.value = null
+  }
+  if (thumbUpdateAnimationFrame.value) {
+    cancelAnimationFrame(thumbUpdateAnimationFrame.value)
+    thumbUpdateAnimationFrame.value = null
+  }
 })
 </script>
 
@@ -941,6 +1243,8 @@ onUnmounted(() => {
       align-items: center;
       height: 105px; /* 与右侧时间轴总高度保持一致 (40+35+30) */
       box-sizing: border-box;
+      flex-shrink: 0;
+      overflow: hidden;
       
       .sidebar-header-cell {
         padding: 12px 16px;
@@ -951,11 +1255,22 @@ onUnmounted(() => {
         justify-content: center;
         height: 100%;
         box-sizing: border-box;
+        flex-shrink: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         
         &:last-child {
           border-right: none;
         }
       }
+    }
+    
+    .gantt-header-spacer {
+      width: 6px;
+      background: #e4e7ed;
+      flex-shrink: 0;
+      height: 105px; /* 与gantt-sidebar-header高度保持一致 */
     }
     
     .gantt-timeline-header {
@@ -1049,10 +1364,10 @@ onUnmounted(() => {
     overflow: hidden;
     
     .gantt-sidebar {
-      border-right: 1px solid #e4e7ed;
       background: #fafafa;
       overflow-y: auto;
       max-height: 400px;
+      flex-shrink: 0;
       
       /* 隐藏滚动条 */
       scrollbar-width: none;
@@ -1077,6 +1392,7 @@ onUnmounted(() => {
           display: flex;
           align-items: center;
           box-sizing: border-box;
+          flex-shrink: 0;
           
           &:last-child {
             border-right: none;
@@ -1086,6 +1402,41 @@ onUnmounted(() => {
         &:last-child {
           border-bottom: none;
         }
+      }
+    }
+    
+    .gantt-resizer {
+      width: 6px;
+      background: #e4e7ed;
+      cursor: col-resize;
+      position: relative;
+      flex-shrink: 0;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background: #409eff;
+      }
+      
+      &.resizing {
+        background: #409eff;
+      }
+      
+      .resizer-handle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 3px;
+        height: 30px;
+        background: #ffffff;
+        border-radius: 2px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      &:hover .resizer-handle,
+      &.resizing .resizer-handle {
+        opacity: 1;
       }
     }
     
@@ -1251,13 +1602,13 @@ onUnmounted(() => {
 
 /* 带时间标记的滚动条样式 */
 .gantt-timeline-scrollbar {
-  height: 50px;
+  height: 55px;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;
   display: flex;
   align-items: flex-start;
   position: relative;
-  padding-top: 10px;
+  // padding-top: 10px;
 }
 
 .scrollbar-container {
@@ -1265,32 +1616,85 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   align-items: flex-start;
-  padding: 0 10px;
+  // padding: 0 10px;
 }
 
 .scrollbar-track {
   position: relative;
   width: 100%;
-  height: 8px;
+  height: 15px;
   background: #e9ecef;
-  border-radius: 4px;
+  // border-radius: 4px;
   cursor: pointer;
   overflow: visible;
   margin-bottom: 2px;
 }
 
+/* 年份分块样式 */
+.year-blocks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.year-block {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  min-width: 60px;
+  overflow: hidden;
+}
+
+.year-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 年份分块颜色循环 */
+.year-block-0 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.year-block-1 {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.year-block-2 {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.year-block-3 {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
 .scrollbar-thumb {
   position: absolute;
-  top: -4px;
+  top: 16px;
   height: 16px;
-  width: 0;
+  width: 0 !important;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-bottom: 12px solid #409eff;
   cursor: grab;
-  transition: border-bottom-color 0.2s ease;
-  transform: translateX(-50%);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, border-bottom-color;
+  z-index: 10;
 }
 
 .scrollbar-thumb:hover {
@@ -1307,14 +1711,15 @@ onUnmounted(() => {
   top: 16px;
   font-size: 10px;
   color: #606266;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   padding: 2px 6px;
   border-radius: 3px;
   border: 1px solid #e4e7ed;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-  transition: transform 0.2s ease, left 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 15;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, left;
 }
 
 .timeline-marks {
@@ -1323,6 +1728,7 @@ onUnmounted(() => {
   left: 0;
   height: 100%;
   pointer-events: none;
+  z-index: 5;
 }
 
 .timeline-mark {
@@ -1384,47 +1790,48 @@ onUnmounted(() => {
 /* 时间滚动选择器样式 */
 .gantt-time-scroller {
   height: auto;
-  min-height: 180px;
+  min-height: 60px;
   background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9ecef;
   display: flex;
-  align-items: stretch;
+  align-items: center;
 }
 
 .scroller-controls {
   display: flex;
   width: 100%;
-  padding: 15px;
+  padding: 12px 15px;
 }
 
-.scroller-vertical-layout {
+.scroller-horizontal-layout {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
   width: 100%;
 }
 
 .scroller-group {
   display: flex;
   align-items: center;
-  gap: 15px;
-  width: 100%;
+  gap: 8px;
+  flex: 1;
 }
 
 .scroller-group label {
   font-size: 14px;
   color: #495057;
   font-weight: 500;
-  min-width: 40px;
+  min-width: 30px;
   flex-shrink: 0;
 }
 
 .scroller-wrapper {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 8px;
   flex: 1;
-  width: 100%;
+  min-width: 120px;
 }
 
 .time-slider {
@@ -1477,35 +1884,37 @@ onUnmounted(() => {
 }
 
 .scroller-value {
-  min-width: 40px;
+  min-width: 35px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   color: #212529;
   font-weight: 600;
   background: white;
-  padding: 4px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid #dee2e6;
+  flex-shrink: 0;
 }
 
 .scroller-actions {
   display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 10px;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .action-btn {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid #007bff;
   background: white;
   color: #007bff;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   transition: all 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .action-btn:hover {
