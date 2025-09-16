@@ -7,45 +7,69 @@
           <div class="scroller-group">
             <label>年:</label>
             <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                :min="minYear" 
-                :max="maxYear" 
-                v-model="currentYear" 
-                @input="onYearChange"
-                class="time-slider year-slider"
-              />
-              <span class="scroller-value">{{ currentYear }}</span>
+              <div class="custom-slider-container">
+                <input 
+                  type="range" 
+                  :min="minYear" 
+                  :max="maxYear" 
+                  v-model="currentYear" 
+                  @input="onYearChange"
+                  class="time-slider year-slider"
+                  id="year-slider"
+                />
+                <div class="slider-thumb-label year-thumb" 
+                     :style="getThumbStyle('year')"
+                     @mousedown="startThumbDrag($event, 'year')"
+                     :class="{ 'dragging': isDraggingThumb && dragThumbType === 'year' }">
+                  {{ currentYear }}
+                </div>
+              </div>
             </div>
           </div>
           
           <div class="scroller-group">
             <label>月:</label>
             <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                min="1" 
-                max="12" 
-                v-model="currentMonth" 
-                @input="onMonthChange"
-                class="time-slider month-slider"
-              />
-              <span class="scroller-value">{{ currentMonth }}</span>
+              <div class="custom-slider-container">
+                <input 
+                  type="range" 
+                  min="1" 
+                  max="12" 
+                  v-model="currentMonth" 
+                  @input="onMonthChange"
+                  class="time-slider month-slider"
+                  id="month-slider"
+                />
+                <div class="slider-thumb-label month-thumb" 
+                     :style="getThumbStyle('month')"
+                     @mousedown="startThumbDrag($event, 'month')"
+                     :class="{ 'dragging': isDraggingThumb && dragThumbType === 'month' }">
+                  {{ currentMonth }}
+                </div>
+              </div>
             </div>
           </div>
           
           <div class="scroller-group">
             <label>日:</label>
             <div class="scroller-wrapper">
-              <input 
-                type="range" 
-                min="1" 
-                :max="daysInCurrentMonth" 
-                v-model="currentDay" 
-                @input="onDayChange"
-                class="time-slider day-slider"
-              />
-              <span class="scroller-value">{{ currentDay }}</span>
+              <div class="custom-slider-container">
+                <input 
+                  type="range" 
+                  min="1" 
+                  :max="daysInCurrentMonth" 
+                  v-model="currentDay" 
+                  @input="onDayChange"
+                  class="time-slider day-slider"
+                  id="day-slider"
+                />
+                <div class="slider-thumb-label day-thumb" 
+                     :style="getThumbStyle('day')"
+                     @mousedown="startThumbDrag($event, 'day')"
+                     :class="{ 'dragging': isDraggingThumb && dragThumbType === 'day' }">
+                  {{ currentDay }}
+                </div>
+              </div>
             </div>
           </div>
           
@@ -332,10 +356,15 @@ const scrollbarDragStartX = ref(0)
 const scrollbarDragStartScrollLeft = ref(0)
 
 // 时间滚动选择器相关数据
-
 const currentYear = ref(new Date().getFullYear())
 const currentMonth = ref(new Date().getMonth() + 1)
 const currentDay = ref(new Date().getDate())
+
+// 滑块标签拖拽相关数据
+const isDraggingThumb = ref(false)
+const dragThumbType = ref<'year' | 'month' | 'day' | null>(null)
+const thumbDragStartX = ref(0)
+const thumbDragStartValue = ref(0)
 
 // 滑块位置状态（用于响应式更新日期显示）
 const thumbPosition = ref({ left: 0, width: 0 })
@@ -1010,6 +1039,39 @@ function getTaskBarWidth(task: GanttTask): number {
   return duration * props.cellWidth
 }
 
+// 计算滑块标签位置
+function getThumbStyle(type: 'year' | 'month' | 'day') {
+  let value: number
+  let min: number
+  let max: number
+  
+  switch (type) {
+    case 'year':
+      value = currentYear.value
+      min = minYear.value
+      max = maxYear.value
+      break
+    case 'month':
+      value = currentMonth.value
+      min = 1
+      max = 12
+      break
+    case 'day':
+      value = currentDay.value
+      min = 1
+      max = daysInCurrentMonth.value
+      break
+  }
+  
+  // 计算滑块位置百分比
+  const percentage = ((value - min) / (max - min)) * 100
+  
+  return {
+    left: `${percentage}%`,
+    transform: 'translateX(-50%)' // 以标签中心为基准进行定位
+  }
+}
+
 
 
 // 初始化
@@ -1103,6 +1165,105 @@ function getDatePixelPosition(targetDate: Date): number {
   return timelineData.value[closestIndex].left
 }
 
+// 开始拖拽滑块标签
+function startThumbDrag(event: MouseEvent, type: 'year' | 'month' | 'day') {
+  isDraggingThumb.value = true
+  dragThumbType.value = type
+  thumbDragStartX.value = event.clientX
+  
+  // 记录开始拖拽时的数值
+  switch (type) {
+    case 'year':
+      thumbDragStartValue.value = currentYear.value
+      break
+    case 'month':
+      thumbDragStartValue.value = currentMonth.value
+      break
+    case 'day':
+      thumbDragStartValue.value = currentDay.value
+      break
+  }
+  
+  // 添加全局事件监听器
+  document.addEventListener('mousemove', onThumbDrag)
+  document.addEventListener('mouseup', endThumbDrag)
+  
+  // 防止文本选择和默认行为
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+// 拖拽滑块标签过程
+function onThumbDrag(event: MouseEvent) {
+  if (!isDraggingThumb.value || !dragThumbType.value) return
+  
+  const deltaX = event.clientX - thumbDragStartX.value
+  const sliderElement = document.getElementById(`${dragThumbType.value}-slider`) as HTMLInputElement
+  
+  if (!sliderElement) return
+  
+  // 获取滑块的宽度和范围
+  const sliderRect = sliderElement.getBoundingClientRect()
+  const sliderWidth = sliderRect.width
+  
+  let min: number, max: number
+  switch (dragThumbType.value) {
+    case 'year':
+      min = minYear.value
+      max = maxYear.value
+      break
+    case 'month':
+      min = 1
+      max = 12
+      break
+    case 'day':
+      min = 1
+      max = daysInCurrentMonth.value
+      break
+  }
+  
+  // 计算新的数值
+  const range = max - min
+  const pixelPerUnit = sliderWidth / range
+  const unitChange = deltaX / pixelPerUnit
+  let newValue = Math.round(thumbDragStartValue.value + unitChange)
+  
+  // 限制在有效范围内
+  newValue = Math.max(min, Math.min(max, newValue))
+  
+  // 更新对应的数值
+  switch (dragThumbType.value) {
+    case 'year':
+      if (newValue !== currentYear.value) {
+        currentYear.value = newValue
+        onYearChange()
+      }
+      break
+    case 'month':
+      if (newValue !== currentMonth.value) {
+        currentMonth.value = newValue
+        onMonthChange()
+      }
+      break
+    case 'day':
+      if (newValue !== currentDay.value) {
+        currentDay.value = newValue
+        onDayChange()
+      }
+      break
+  }
+}
+
+// 结束拖拽滑块标签
+function endThumbDrag() {
+  isDraggingThumb.value = false
+  dragThumbType.value = null
+  
+  // 移除全局事件监听器
+  document.removeEventListener('mousemove', onThumbDrag)
+  document.removeEventListener('mouseup', endThumbDrag)
+}
+
 // 对齐滚动位置到日期边界
 function alignScrollToDateBoundary(scrollLeft: number): number {
   // 将滚动位置对齐到最近的日期边界（cellWidth的倍数）
@@ -1183,694 +1344,5 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.c-gantt {
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  overflow: hidden;
-  background: #fff;
-  
-  .gantt-header {
-    display: flex;
-    border-bottom: 1px solid #e4e7ed;
-    background: #f5f7fa;
-    
-    .gantt-sidebar-header {
-      border-right: 1px solid #e4e7ed;
-      background: #fafafa;
-      display: flex;
-      align-items: center;
-      height: 105px; /* 与右侧时间轴总高度保持一致 (40+35+30) */
-      box-sizing: border-box;
-      flex-shrink: 0;
-      overflow: hidden;
-      
-      .sidebar-header-cell {
-        padding: 12px 16px;
-        font-weight: 600;
-        border-right: 1px solid #e4e7ed;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        box-sizing: border-box;
-        flex-shrink: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        
-        &:last-child {
-          border-right: none;
-        }
-      }
-    }
-    
-    .gantt-header-spacer {
-      width: 6px;
-      background: #e4e7ed;
-      flex-shrink: 0;
-      height: 105px; /* 与gantt-sidebar-header高度保持一致 */
-    }
-    
-    .gantt-timeline-header {
-      flex: 1;
-      overflow-x: hidden;
-      position: relative;
-      
-      .timeline-year-row {
-        position: relative;
-        height: 40px;
-        border-bottom: 1px solid #e4e7ed;
-        background: #f8f9fa;
-        
-        .timeline-year-cell {
-          position: absolute;
-          top: 0;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          font-size: 14px;
-          color: #303133;
-          border-right: 1px solid #e4e7ed;
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-          
-          &:hover {
-            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-          }
-        }
-      }
-      
-      .timeline-month-row {
-        position: relative;
-        height: 35px;
-        border-bottom: 1px solid #e4e7ed;
-        background: #f1f3f4;
-        
-        .timeline-month-cell {
-          position: absolute;
-          top: 0;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 500;
-          font-size: 13px;
-          color: #495057;
-          border-right: 1px solid #e4e7ed;
-          background: linear-gradient(135deg, #f1f3f4 0%, #e9ecef 100%);
-          
-          &:hover {
-            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
-          }
-        }
-      }
-      
-      .timeline-day-row {
-        position: relative;
-        height: 30px;
-        background: #ffffff;
-
-        .timeline-day-cell {
-          position: absolute;
-          top: 0;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-right: 1px solid #e4e7ed;
-          font-size: 12px;
-          color: #606266;
-          transition: all 0.2s ease;
-          
-          &:hover {
-            background: #f8f9fa;
-            color: #303133;
-          }
-          
-          &:last-child {
-            border-right: none;
-          }
-        }
-      }
-    }
-  }
-  
-  .gantt-body {
-    display: flex;
-    max-height: 400px;
-    overflow: hidden;
-    
-    .gantt-sidebar {
-      background: #fafafa;
-      overflow-y: auto;
-      max-height: 400px;
-      flex-shrink: 0;
-      
-      /* 隐藏滚动条 */
-      scrollbar-width: none;
-      &::-webkit-scrollbar {
-        display: none;
-      }
-      
-      .task-row {
-        display: flex;
-        align-items: center;
-        border-bottom: 1px solid #e4e7ed;
-        box-sizing: border-box;
-        
-        .task-cell {
-          padding: 0 16px;
-          border-right: 1px solid #e4e7ed;
-          font-size: 14px;
-          color: #303133;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: flex;
-          align-items: center;
-          box-sizing: border-box;
-          flex-shrink: 0;
-          
-          &:last-child {
-            border-right: none;
-          }
-        }
-        
-        &:last-child {
-          border-bottom: none;
-        }
-      }
-    }
-    
-    .gantt-resizer {
-      width: 6px;
-      background: #e4e7ed;
-      cursor: col-resize;
-      position: relative;
-      flex-shrink: 0;
-      transition: background-color 0.2s ease;
-      
-      &:hover {
-        background: #409eff;
-      }
-      
-      &.resizing {
-        background: #409eff;
-      }
-      
-      .resizer-handle {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 3px;
-        height: 30px;
-        background: #ffffff;
-        border-radius: 2px;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-      }
-      
-      &:hover .resizer-handle,
-      &.resizing .resizer-handle {
-        opacity: 1;
-      }
-    }
-    
-    .gantt-chart {
-      flex: 1;
-      position: relative;
-      overflow-x: auto;
-      overflow-y: auto;
-      max-height: 400px;
-      
-      /* 隐藏滚动条 */
-      scrollbar-width: none;
-      &::-webkit-scrollbar {
-        display: none;
-      }
-      
-      .gantt-grid {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        
-        .grid-line {
-          position: absolute;
-          
-          &.vertical {
-            top: 0;
-            bottom: 0;
-            border-right: 1px solid #e4e7ed;
-            
-            &:last-child {
-              border-right: none;
-            }
-          }
-          
-          &.horizontal {
-            left: 0;
-            right: 0;
-            border-bottom: 1px solid #e4e7ed;
-            height: 1px;
-            
-            &:last-child {
-              border-bottom: none;
-            }
-          }
-        }
-      }
-      
-      .task-bar-container {
-        position: absolute;
-        left: 0;
-        border-bottom: 1px solid #e4e7ed;
-        box-sizing: border-box;
-        
-        &:last-child {
-          border-bottom: none;
-        }
-        
-        .task-bar {
-          position: absolute;
-          cursor: move;
-          transition: all 0.2s ease;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          
-          &:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            transform: translateY(-1px);
-          }
-          
-          &.dragging {
-            opacity: 0.8;
-            z-index: 10;
-          }
-          
-          .task-bar-content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 100%;
-            padding: 0 8px;
-            color: white;
-            font-size: 12px;
-            
-            .task-title {
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              flex: 1;
-            }
-            
-            .task-progress {
-              font-weight: 600;
-              margin-left: 8px;
-            }
-          }
-          
-          .task-bar-progress {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.3);
-            transition: width 0.3s ease;
-          }
-          
-          .progress-handle {
-            position: absolute;
-            top: -2px;
-            width: 8px;
-            height: 28px;
-            background: #ffffff;
-            border: 2px solid #409eff;
-            border-radius: 4px;
-            cursor: ew-resize;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 3;
-            
-            &:hover {
-              opacity: 1;
-              box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
-            }
-          }
-          
-          &:hover .progress-handle {
-            opacity: 0.8;
-          }
-          
-          .resize-handle {
-            position: absolute;
-            top: 0;
-            width: 6px;
-            height: 100%;
-            cursor: ew-resize;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            
-            &.left {
-              left: -3px;
-              background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8));
-            }
-            
-            &.right {
-              right: -3px;
-              background: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.8));
-            }
-          }
-          
-          &:hover .resize-handle {
-            opacity: 1;
-          }
-        }
-      }
-    }
-  }
-}
-
-
-
-/* 带时间标记的滚动条样式 */
-.gantt-timeline-scrollbar {
-  height: 30px;
-  background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  align-items: flex-start;
-  position: relative;
-  // padding-top: 10px;
-}
-
-.scrollbar-container {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  // padding: 0 10px;
-}
-
-.scrollbar-track {
-  position: relative;
-  width: 100%;
-  height: 15px;
-  background: #e9ecef;
-  // border-radius: 4px;
-  cursor: pointer;
-  overflow: visible;
-  margin-bottom: 2px;
-}
-
-/* 年份分块样式 */
-.year-blocks {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.year-block {
-  position: absolute;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 8px;
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
-  min-width: 60px;
-  overflow: hidden;
-}
-
-.year-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-  user-select: none;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* 年份分块颜色循环 */
-.year-block-0 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.year-block-1 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.year-block-2 {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.year-block-3 {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-}
-
-.scrollbar-thumb {
-  position: absolute;
-  top: 15px;
-  height: 16px;
-  width: 0 !important;
-  height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 12px solid #409eff;
-  cursor: grab;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, border-bottom-color;
-  z-index: 10;
-}
-
-.scrollbar-thumb:hover {
-  border-bottom-color: #337ecc;
-}
-
-.scrollbar-thumb:active {
-  cursor: grabbing;
-  border-bottom-color: #2b6cb0;
-}
-
-
-
-.timeline-marks {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  pointer-events: none;
-  z-index: 5;
-}
-
-.timeline-mark {
-  position: absolute;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.mark-line {
-  width: 1px;
-  background: #909399;
-  margin-bottom: 2px;
-}
-
-.mark-label {
-  font-size: 10px;
-  color: #606266;
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 1px 3px;
-  border-radius: 2px;
-  line-height: 1;
-}
-
-.timeline-mark.day {
-  .mark-line {
-    height: 100%;
-    width: 1px;
-    background: #909399;
-  }
-}
-
-/* 年份颜色循环 */
-.timeline-mark[data-year] .mark-line {
-  background: #909399;
-}
-
-.timeline-mark[data-year="2024"] .mark-line,
-.timeline-mark[data-year="2029"] .mark-line {
-  background: #e6a23c;
-}
-
-.timeline-mark[data-year="2025"] .mark-line,
-.timeline-mark[data-year="2030"] .mark-line {
-  background: #67c23a;
-}
-
-.timeline-mark[data-year="2026"] .mark-line {
-  background: #409eff;
-}
-
-.timeline-mark[data-year="2027"] .mark-line {
-  background: #f56c6c;
-}
-
-/* 时间滚动选择器样式 */
-.gantt-time-scroller {
-  height: auto;
-  min-height: 60px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  align-items: center;
-}
-
-.scroller-controls {
-  display: flex;
-  width: 100%;
-  padding: 12px 15px;
-}
-
-.scroller-horizontal-layout {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-}
-
-.scroller-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.scroller-group label {
-  font-size: 14px;
-  color: #495057;
-  font-weight: 500;
-  min-width: 30px;
-  flex-shrink: 0;
-}
-
-.scroller-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 120px;
-}
-
-.time-slider {
-  flex: 1;
-  height: 6px;
-  border-radius: 3px;
-  background: #e9ecef;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.time-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #007bff;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s;
-}
-
-.time-slider::-webkit-slider-thumb:hover {
-  background: #0056b3;
-  transform: scale(1.1);
-}
-
-.time-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #007bff;
-  cursor: pointer;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.year-slider {
-  background: linear-gradient(to right, #e3f2fd 0%, #bbdefb 100%);
-}
-
-.month-slider {
-  background: linear-gradient(to right, #f3e5f5 0%, #ce93d8 100%);
-}
-
-.day-slider {
-  background: linear-gradient(to right, #e8f5e8 0%, #a5d6a7 100%);
-}
-
-.scroller-value {
-  min-width: 35px;
-  text-align: center;
-  font-size: 13px;
-  color: #212529;
-  font-weight: 600;
-  background: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid #dee2e6;
-  flex-shrink: 0;
-}
-
-.scroller-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.action-btn {
-  padding: 6px 12px;
-  border: 1px solid #007bff;
-  background: white;
-  color: #007bff;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: all 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.action-btn:hover {
-  background: #007bff;
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
-}
-
-.action-btn:active {
-  background: #0056b3;
-  border-color: #0056b3;
-  transform: translateY(0);
-}
+@use './css/index.scss';
 </style>

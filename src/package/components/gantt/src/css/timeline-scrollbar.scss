@@ -1,0 +1,170 @@
+// 时间轴滚动条样式文件
+@use './variables.scss' as *;
+
+/* 带时间标记的滚动条样式 */
+.gantt-timeline-scrollbar {
+  height: 30px;
+  background: $bg-color-light;
+  border-top: 1px solid $border-color-light;
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+}
+
+.scrollbar-container {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+}
+
+.scrollbar-track {
+  position: relative;
+  width: 100%;
+  height: 15px;
+  background: $border-color-light;
+  cursor: pointer;
+  overflow: visible;
+  margin-bottom: 2px;
+}
+
+/* 年份分块样式 */
+.year-blocks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.year-block {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 8px;
+  border-right: 1px solid $border-color-lighter;
+  min-width: 60px;
+  overflow: hidden;
+}
+
+.year-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-color-white;
+  text-shadow: 0 1px 2px $shadow-dark;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 年份分块颜色循环 */
+.year-block-0 {
+  background: $gradient-year-block-0;
+}
+
+.year-block-1 {
+  background: $gradient-year-block-1;
+}
+
+.year-block-2 {
+  background: $gradient-year-block-2;
+}
+
+.year-block-3 {
+  background: $gradient-year-block-3;
+}
+
+.scrollbar-thumb {
+  position: absolute;
+  top: 15px;
+  height: 16px;
+  width: 0 !important;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 12px solid $primary-color;
+  cursor: grab;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, border-bottom-color;
+  z-index: 10;
+}
+
+.scrollbar-thumb:hover {
+  border-bottom-color: $primary-color-hover;
+}
+
+.scrollbar-thumb:active {
+  cursor: grabbing;
+  border-bottom-color: $primary-color-active;
+}
+
+.timeline-marks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.timeline-mark {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mark-line {
+  width: 1px;
+  background: $text-color-placeholder;
+  margin-bottom: 2px;
+}
+
+.mark-label {
+  font-size: 10px;
+  color: $text-color-regular;
+  white-space: nowrap;
+  background: $bg-color-overlay;
+  padding: 1px 3px;
+  border-radius: 2px;
+  line-height: 1;
+}
+
+.timeline-mark.day {
+  .mark-line {
+    height: 100%;
+    width: 1px;
+    background: $text-color-placeholder;
+  }
+}
+
+/* 年份颜色循环 */
+.timeline-mark[data-year] .mark-line {
+  background: $text-color-placeholder;
+}
+
+.timeline-mark[data-year="2024"] .mark-line,
+.timeline-mark[data-year="2029"] .mark-line {
+  background: $timeline-mark-2024;
+}
+
+.timeline-mark[data-year="2025"] .mark-line,
+.timeline-mark[data-year="2030"] .mark-line {
+  background: $timeline-mark-2025;
+}
+
+.timeline-mark[data-year="2026"] .mark-line {
+  background: $timeline-mark-2026;
+}
+
+.timeline-mark[data-year="2027"] .mark-line {
+  background: $timeline-mark-2027;
+}

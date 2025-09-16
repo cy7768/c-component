@@ -1,0 +1,236 @@
+// 时间滚动选择器样式文件
+@use './variables.scss' as *;
+
+/* 时间滚动选择器样式 */
+.gantt-time-scroller {
+  height: auto;
+  min-height: 80px;
+  background: $bg-color-light;
+  border-bottom: 1px solid $border-color-light;
+  display: flex;
+  align-items: center;
+}
+
+.scroller-controls {
+  display: flex;
+  width: 100%;
+  padding: 12px 15px;
+}
+
+.scroller-horizontal-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.scroller-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.scroller-group label {
+  font-size: 14px;
+  color: $text-color-secondary;
+  font-weight: 500;
+  min-width: 30px;
+  flex-shrink: 0;
+}
+
+.scroller-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 120px;
+}
+
+/* 自定义滑块容器 */
+.custom-slider-container {
+  position: relative;
+  flex: 1;
+  height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.time-slider {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: $border-color-light;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* 隐藏原生滑块样式 */
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0;
+  height: 0;
+  background: $transparent;
+  cursor: pointer;
+}
+
+.time-slider::-moz-range-thumb {
+  width: 0;
+  height: 0;
+  background: $transparent;
+  cursor: pointer;
+  border: none;
+}
+
+/* 自定义滑块标签 */
+.slider-thumb-label {
+  position: absolute;
+  top: -20px;
+  background: $primary-color-light;
+  color: $text-color-white;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 28px;
+  text-align: center;
+  box-shadow: 0 3px 8px $shadow-primary-dark;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+  user-select: none;
+  z-index: 10;
+  white-space: nowrap;
+  line-height: 1;
+  border: 2px solid $border-color-lighter;
+  cursor: grab;
+}
+
+.slider-thumb-label:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px $shadow-primary-darker;
+}
+
+.slider-thumb-label.dragging {
+  cursor: grabbing;
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: 0 8px 20px $shadow-primary-darkest;
+  z-index: 30;
+  transition: none;
+}
+
+.slider-thumb-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid $primary-color-light;
+  filter: drop-shadow(0 1px 2px $shadow-light);
+}
+
+/* 不同类型滑块的颜色 */
+.year-thumb {
+  background: $gradient-year-thumb;
+  border-color: $border-color-lighter;
+}
+
+.year-thumb::after {
+  border-top-color: $slider-year-start;
+}
+
+.month-thumb {
+  background: $gradient-month-thumb;
+  border-color: $border-color-lighter;
+}
+
+.month-thumb::after {
+  border-top-color: $slider-month-start;
+}
+
+.day-thumb {
+  background: $gradient-day-thumb;
+  border-color: $border-color-lighter;
+}
+
+.day-thumb::after {
+  border-top-color: $slider-day-start;
+}
+
+/* 滑块悬停效果 */
+.time-slider:hover + .slider-thumb-label {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 16px $shadow-primary-strong;
+}
+
+.year-slider:hover + .year-thumb {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 16px $shadow-year;
+  background: $gradient-year-thumb-hover;
+}
+
+.month-slider:hover + .month-thumb {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 16px $shadow-month;
+  background: $gradient-month-thumb-hover;
+}
+
+.day-slider:hover + .day-thumb {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 6px 16px $shadow-day;
+  background: $gradient-day-thumb-hover;
+}
+
+.year-slider {
+  background: $gradient-year-slider;
+}
+
+.month-slider {
+  background: $gradient-month-slider;
+}
+
+.day-slider {
+  background: $gradient-day-slider;
+}
+
+.scroller-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: 1px solid $primary-color-light;
+  background: $text-color-white;
+  color: $primary-color-light;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.action-btn:hover {
+  background: $primary-color-light;
+  color: $text-color-white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px $shadow-primary-dark;
+}
+
+.action-btn:active {
+  background: $primary-color-dark;
+  border-color: $primary-color-dark;
+  transform: translateY(0);
+}

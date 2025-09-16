@@ -1,0 +1,7 @@
+// 甘特图组件样式入口文件
+// 统一导入所有样式模块
+
+@use './variables.scss';
+@use './gantt.scss';
+@use './timeline-scrollbar.scss';
+@use './time-scroller.scss';

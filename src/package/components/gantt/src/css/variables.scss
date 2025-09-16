@@ -1,0 +1,114 @@
+// 甘特图组件颜色变量文件
+
+// 基础颜色
+$white: #ffffff;
+$black: #000000;
+$transparent: transparent;
+
+// 边框颜色
+$border-color-base: #e4e7ed;
+$border-color-light: #e9ecef;
+$border-color-lighter: rgba(255, 255, 255, 0.3);
+
+// 背景颜色
+$bg-color-white: #ffffff;
+$bg-color-light: #f8f9fa;
+$bg-color-lighter: #fafafa;
+$bg-color-gray: #f5f7fa;
+$bg-color-gray-light: #f1f3f4;
+$bg-color-overlay: rgba(255, 255, 255, 0.8);
+$bg-color-progress: rgba(255, 255, 255, 0.3);
+
+// 文字颜色
+$text-color-primary: #303133;
+$text-color-regular: #606266;
+$text-color-secondary: #495057;
+$text-color-placeholder: #909399;
+$text-color-white: white;
+
+// 主题色
+$primary-color: #409eff;
+$primary-color-hover: #337ecc;
+$primary-color-active: #2b6cb0;
+$primary-color-light: #007bff;
+$primary-color-dark: #0056b3;
+
+// 年份主题色 - 渐变色组
+$year-gradient-1-start: #667eea;
+$year-gradient-1-end: #764ba2;
+$year-gradient-2-start: #f093fb;
+$year-gradient-2-end: #f5576c;
+$year-gradient-3-start: #4facfe;
+$year-gradient-3-end: #00f2fe;
+$year-gradient-4-start: #43e97b;
+$year-gradient-4-end: #38f9d7;
+
+// 滑块主题色
+$slider-year-start: #667eea;
+$slider-year-end: #764ba2;
+$slider-year-hover-start: #7c8cff;
+$slider-year-hover-end: #8a5cb8;
+$slider-year-bg-start: #e3f2fd;
+$slider-year-bg-end: #bbdefb;
+
+$slider-month-start: #f093fb;
+$slider-month-end: #f5576c;
+$slider-month-hover-start: #ff9fff;
+$slider-month-hover-end: #ff6b82;
+$slider-month-bg-start: #f3e5f5;
+$slider-month-bg-end: #ce93d8;
+
+$slider-day-start: #43e97b;
+$slider-day-end: #38f9d7;
+$slider-day-hover-start: #59ff91;
+$slider-day-hover-end: #4effed;
+$slider-day-bg-start: #e8f5e8;
+$slider-day-bg-end: #a5d6a7;
+
+// 时间轴标记颜色
+$timeline-mark-2024: #e6a23c;
+$timeline-mark-2025: #67c23a;
+$timeline-mark-2026: #409eff;
+$timeline-mark-2027: #f56c6c;
+
+// 阴影颜色
+$shadow-light: rgba(0, 0, 0, 0.1);
+$shadow-medium: rgba(0, 0, 0, 0.15);
+$shadow-dark: rgba(0, 0, 0, 0.5);
+$shadow-primary: rgba(64, 158, 255, 0.3);
+$shadow-primary-medium: rgba(64, 158, 255, 0.4);
+$shadow-primary-strong: rgba(64, 158, 255, 0.5);
+$shadow-primary-dark: rgba(0, 123, 255, 0.4);
+$shadow-primary-darker: rgba(0, 123, 255, 0.6);
+$shadow-primary-darkest: rgba(0, 123, 255, 0.8);
+
+// 年份滑块阴影
+$shadow-year: rgba(102, 126, 234, 0.5);
+$shadow-month: rgba(240, 147, 251, 0.5);
+$shadow-day: rgba(67, 233, 123, 0.5);
+
+// 渐变背景
+$gradient-year-cell: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+$gradient-year-cell-hover: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+$gradient-month-cell: linear-gradient(135deg, #f1f3f4 0%, #e9ecef 100%);
+$gradient-month-cell-hover: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+$gradient-resize-left: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8));
+$gradient-resize-right: linear-gradient(to left, transparent, rgba(255, 255, 255, 0.8));
+
+// 年份分块渐变
+$gradient-year-block-0: linear-gradient(135deg, $year-gradient-1-start 0%, $year-gradient-1-end 100%);
+$gradient-year-block-1: linear-gradient(135deg, $year-gradient-2-start 0%, $year-gradient-2-end 100%);
+$gradient-year-block-2: linear-gradient(135deg, $year-gradient-3-start 0%, $year-gradient-3-end 100%);
+$gradient-year-block-3: linear-gradient(135deg, $year-gradient-4-start 0%, $year-gradient-4-end 100%);
+
+// 滑块渐变
+$gradient-year-thumb: linear-gradient(135deg, $slider-year-start 0%, $slider-year-end 100%);
+$gradient-year-thumb-hover: linear-gradient(135deg, $slider-year-hover-start 0%, $slider-year-hover-end 100%);
+$gradient-month-thumb: linear-gradient(135deg, $slider-month-start 0%, $slider-month-end 100%);
+$gradient-month-thumb-hover: linear-gradient(135deg, $slider-month-hover-start 0%, $slider-month-hover-end 100%);
+$gradient-day-thumb: linear-gradient(135deg, $slider-day-start 0%, $slider-day-end 100%);
+$gradient-day-thumb-hover: linear-gradient(135deg, $slider-day-hover-start 0%, $slider-day-hover-end 100%);
+
+$gradient-year-slider: linear-gradient(to right, $slider-year-bg-start 0%, $slider-year-bg-end 100%);
+$gradient-month-slider: linear-gradient(to right, $slider-month-bg-start 0%, $slider-month-bg-end 100%);
+$gradient-day-slider: linear-gradient(to right, $slider-day-bg-start 0%, $slider-day-bg-end 100%);
