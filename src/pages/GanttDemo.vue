@@ -35,6 +35,8 @@
         <li>三层时间轴显示（年-月-日）</li>
         <li>时间滚动选择器：支持通过滑动条按年、月、日精确选择时间</li>
         <li>快捷操作：一键回到今天、重置视图</li>
+        <li><strong>子任务功能：</strong>支持多层级任务结构，点击展开/折叠按钮可以显示或隐藏子任务</li>
+        <li><strong>层级缩进：</strong>子任务会自动缩进显示，清晰展示任务层级关系</li>
         <li>响应式设计，支持滚动查看</li>
       </ul>
     </div>
@@ -52,6 +54,10 @@ interface GanttTask {
   endDate: Date
   progress: number
   color?: string
+  children?: GanttTask[]
+  level?: number
+  expanded?: boolean
+  parentId?: string | number
 }
 
 interface GanttColumn {
@@ -107,7 +113,39 @@ function initTasks() {
       startDate: new Date(baseDate.getTime()),
       endDate: new Date(baseDate.getTime() + 3 * 24 * 60 * 60 * 1000),
       progress: 100,
-      color: '#67c23a'
+      color: '#67c23a',
+      expanded: true,
+      children: [
+        {
+          id: 11,
+          name: '项目立项',
+          startDate: new Date(baseDate.getTime()),
+          endDate: new Date(baseDate.getTime() + 1 * 24 * 60 * 60 * 1000),
+          progress: 100,
+          color: '#67c23a',
+          parentId: 1,
+            children: [
+              {
+                id: 111,
+                name: '项目立项',
+                startDate: new Date(baseDate.getTime()),
+                endDate: new Date(baseDate.getTime() + 1 * 24 * 60 * 60 * 1000),
+                progress: 100,
+                color: '#67c23a',
+                parentId: 11
+              }
+            ]
+        },
+        {
+          id: 12,
+          name: '团队组建',
+          startDate: new Date(baseDate.getTime() + 1 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 3 * 24 * 60 * 60 * 1000),
+          progress: 100,
+          color: '#67c23a',
+          parentId: 1
+        }
+      ]
     },
     {
       id: 2,
@@ -115,7 +153,28 @@ function initTasks() {
       startDate: new Date(baseDate.getTime() + 2 * 24 * 60 * 60 * 1000),
       endDate: new Date(baseDate.getTime() + 8 * 24 * 60 * 60 * 1000),
       progress: 80,
-      color: '#409eff'
+      color: '#409eff',
+      expanded: true,
+      children: [
+        {
+          id: 21,
+          name: '业务需求调研',
+          startDate: new Date(baseDate.getTime() + 2 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 5 * 24 * 60 * 60 * 1000),
+          progress: 100,
+          color: '#409eff',
+          parentId: 2
+        },
+        {
+          id: 22,
+          name: '需求文档编写',
+          startDate: new Date(baseDate.getTime() + 4 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 8 * 24 * 60 * 60 * 1000),
+          progress: 60,
+          color: '#409eff',
+          parentId: 2
+        }
+      ]
     },
     {
       id: 3,
@@ -123,7 +182,37 @@ function initTasks() {
       startDate: new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000),
       endDate: new Date(baseDate.getTime() + 14 * 24 * 60 * 60 * 1000),
       progress: 60,
-      color: '#e6a23c'
+      color: '#e6a23c',
+      expanded: false,
+      children: [
+        {
+          id: 31,
+          name: '架构设计',
+          startDate: new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1000),
+          progress: 80,
+          color: '#e6a23c',
+          parentId: 3
+        },
+        {
+          id: 32,
+          name: '数据库设计',
+          startDate: new Date(baseDate.getTime() + 9 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 12 * 24 * 60 * 60 * 1000),
+          progress: 70,
+          color: '#e6a23c',
+          parentId: 3
+        },
+        {
+          id: 33,
+          name: 'UI设计',
+          startDate: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 14 * 24 * 60 * 60 * 1000),
+          progress: 30,
+          color: '#e6a23c',
+          parentId: 3
+        }
+      ]
     },
     {
       id: 4,
@@ -131,7 +220,37 @@ function initTasks() {
       startDate: new Date(baseDate.getTime() + 12 * 24 * 60 * 60 * 1000),
       endDate: new Date(baseDate.getTime() + 25 * 24 * 60 * 60 * 1000),
       progress: 30,
-      color: '#f56c6c'
+      color: '#f56c6c',
+      expanded: true,
+      children: [
+        {
+          id: 41,
+          name: '前端开发',
+          startDate: new Date(baseDate.getTime() + 12 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 20 * 24 * 60 * 60 * 1000),
+          progress: 40,
+          color: '#f56c6c',
+          parentId: 4
+        },
+        {
+          id: 42,
+          name: '后端开发',
+          startDate: new Date(baseDate.getTime() + 14 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 22 * 24 * 60 * 60 * 1000),
+          progress: 35,
+          color: '#f56c6c',
+          parentId: 4
+        },
+        {
+          id: 43,
+          name: '接口联调',
+          startDate: new Date(baseDate.getTime() + 20 * 24 * 60 * 60 * 1000),
+          endDate: new Date(baseDate.getTime() + 25 * 24 * 60 * 60 * 1000),
+          progress: 0,
+          color: '#f56c6c',
+          parentId: 4
+        }
+      ]
     },
     {
       id: 5,
@@ -172,7 +291,25 @@ function resetTasks() {
 function onTaskUpdate(task: GanttTask) {
   const index = tasks.value.findIndex(t => t.id === task.id)
   if (index !== -1) {
-    tasks.value[index] = { ...task }
+    const originalTask = tasks.value[index]
+    
+    // 保留子任务的原始状态，特别是进度信息
+    const updatedTask = { ...task }
+    if (originalTask.children && task.children) {
+      updatedTask.children = originalTask.children.map(originalChild => {
+        const updatedChild = task.children?.find(c => c.id === originalChild.id)
+        if (updatedChild) {
+          // 保留子任务的进度，只更新位置和时间相关属性
+          return {
+            ...updatedChild,
+            progress: originalChild.progress // 保持子任务原有进度
+          }
+        }
+        return originalChild
+      })
+    }
+    
+    tasks.value[index] = updatedTask
     ElMessage.success(`任务 "${task.name}" 已更新`)
   }
 }

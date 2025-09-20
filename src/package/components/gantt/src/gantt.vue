@@ -141,18 +141,35 @@
       <!-- 左侧任务列表 -->
       <div class="gantt-sidebar" ref="sidebarRef" @scroll="onSidebarScroll" :style="{ width: sidebarWidth + 'px' }">
         <div 
-          v-for="task in tasks" 
+          v-for="task in flattenedTasks" 
           :key="task.id"
           class="task-row"
+          :class="{ 'has-children': task.children && task.children.length > 0 }"
           :style="{ height: rowHeight + 'px' }"
         >
           <div 
-            v-for="column in props.columns" 
+            v-for="(column, columnIndex) in props.columns" 
             :key="column.key"
             class="task-cell"
-            :style="{ width: (column.width || 200) + 'px' }"
+            :style="{ width: (column.width || 200) + 'px', paddingLeft: (columnIndex === 0 ? (task.level || 0) * 20 + 16 : 16) + 'px' }"
           >
-            {{ getColumnValue(task, column) }}
+            <!-- 展开/折叠按钮（仅在第一列且有子任务时显示） -->
+            <div 
+              v-if="columnIndex === 0 && task.children && task.children.length > 0"
+              class="expand-toggle"
+              @click="toggleTaskExpanded(task.id)"
+            >
+              <svg 
+                class="expand-icon"
+                :class="{ 'expanded': task.expanded !== false }"
+                viewBox="0 0 16 16"
+                width="12"
+                height="12"
+              >
+                <path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="task-cell-content">{{ getColumnValue(task, column) }}</span>
           </div>
         </div>
       </div>
@@ -168,7 +185,7 @@
       
       <!-- 右侧甘特图区域 -->
       <div class="gantt-chart" ref="chartRef" @scroll="onChartScroll">
-        <div class="gantt-grid" :style="{ width: totalWidth + 'px', height: tasks.length * rowHeight + 'px' }">
+        <div class="gantt-grid" :style="{ width: totalWidth + 'px', height: flattenedTasks.length * rowHeight + 'px' }">
           <!-- 垂直网格线 -->
           <div 
             v-for="date in timelineData" 
@@ -182,7 +199,7 @@
         
         <!-- 任务条 -->
         <div 
-          v-for="(task, index) in tasks" 
+          v-for="(task, index) in flattenedTasks" 
           :key="task.id"
           class="task-bar-container"
           :style="{ top: index * rowHeight + 'px', height: rowHeight + 'px', width: totalWidth + 'px' }"
@@ -199,11 +216,31 @@
             </div>
             <div class="task-bar-progress" :style="{ width: task.progress + '%', borderRadius: Math.min(computedTaskBarHeight / 2, 12) + 'px' }"></div>
             
+            <!-- 虚拟进度指示器 -->
+            <div 
+              v-if="showVirtualProgress && progressDragging?.id === task.id"
+              class="virtual-progress-indicator"
+              :style="{ width: virtualProgress + '%', borderRadius: Math.min(computedTaskBarHeight / 2, 12) + 'px' }"
+            ></div>
+            
+            <!-- 虚拟进度手柄 -->
+            <div 
+              v-if="showVirtualProgress && progressDragging?.id === task.id"
+              class="virtual-progress-handle"
+              :style="{ left: virtualProgress + '%' }"
+            ></div>
+            
             <!-- 进度拖动手柄 -->
             <div 
               class="progress-handle"
+              :class="{ 
+                'dragging': progressDragging?.id === task.id,
+                'has-children': task.children && task.children.length > 0,
+                'is-child': task.parentId
+              }"
               :style="{ left: task.progress + '%' }"
               @mousedown.stop="startProgressDrag($event, task)"
+              :title="getProgressHandleTooltip(task)"
             ></div>
             
             <!-- 左侧调整手柄 -->
@@ -258,6 +295,10 @@ interface GanttTask {
   endDate: Date
   progress: number
   color?: string
+  children?: GanttTask[]
+  level?: number
+  expanded?: boolean
+  parentId?: string | number
 }
 
 interface GanttColumn {
@@ -347,6 +388,9 @@ const progressDragging = ref<GanttTask | null>(null)
 const dragStartX = ref(0)
 const dragStartDate = ref<Date>()
 const dragStartProgress = ref(0)
+// 虚拟进度指示器状态
+const virtualProgress = ref<number>(0)
+const showVirtualProgress = ref<boolean>(false)
 const isScrollSyncing = ref(false)
 
 // 滚动条相关数据
@@ -468,6 +512,45 @@ const sidebarWidth = computed(() => {
   const defaultWidth = props.columns.reduce((sum, col) => sum + (col.width || 200), 0)
   return dynamicSidebarWidth.value || defaultWidth
 })
+
+// 扁平化任务列表，处理子任务的展开/折叠
+const flattenedTasks = computed(() => {
+  const result: GanttTask[] = []
+  
+  function flattenTask(task: GanttTask, level = 0) {
+    // 设置任务层级
+    const taskWithLevel = { ...task, level }
+    result.push(taskWithLevel)
+    
+    // 如果任务展开且有子任务，递归处理子任务
+    if (task.expanded !== false && task.children && task.children.length > 0) {
+      task.children.forEach(child => {
+        flattenTask(child, level + 1)
+      })
+    }
+  }
+  
+  props.tasks.forEach(task => flattenTask(task))
+  return result
+})
+
+// 切换任务展开/折叠状态
+function toggleTaskExpanded(taskId: string | number) {
+  function toggleInTasks(tasks: GanttTask[]): boolean {
+    for (const task of tasks) {
+      if (task.id === taskId) {
+        task.expanded = !task.expanded
+        return true
+      }
+      if (task.children && toggleInTasks(task.children)) {
+        return true
+      }
+    }
+    return false
+  }
+  
+  toggleInTasks(props.tasks)
+}
 
 // 初始化动态宽度
 onMounted(() => {
@@ -990,6 +1073,10 @@ function startProgressDrag(event: MouseEvent, task: GanttTask) {
   dragStartX.value = event.clientX
   dragStartProgress.value = task.progress
   
+  // 初始化虚拟进度指示器
+  virtualProgress.value = task.progress
+  showVirtualProgress.value = true
+  
   document.addEventListener('mousemove', onProgressDrag)
   document.addEventListener('mouseup', endProgressDrag)
 }
@@ -1003,7 +1090,11 @@ function onProgressDrag(event: MouseEvent) {
   const progressDelta = (deltaX / taskBarWidth) * 100
   
   let newProgress = dragStartProgress.value + progressDelta
-  newProgress = Math.max(0, Math.min(100, newProgress)) // 限制在0-100之间
+  // 移除父子任务进度约束，允许自由拖拽
+  newProgress = Math.max(0, Math.min(100, newProgress))
+  
+  // 更新虚拟进度指示器位置
+  virtualProgress.value = Math.round(newProgress)
   
   // 使用requestAnimationFrame优化性能
   if (!progressAnimationFrame.value) {
@@ -1019,9 +1110,16 @@ function onProgressDrag(event: MouseEvent) {
 // 结束拖拽进度
 function endProgressDrag() {
   if (progressDragging.value) {
+    // 移除父子任务进度联动，让进度拖动互不影响
+    // updateParentProgress(progressDragging.value)
+    
     emit('task-update', { ...progressDragging.value })
     progressDragging.value = null
   }
+  
+  // 隐藏虚拟进度指示器
+  showVirtualProgress.value = false
+  virtualProgress.value = 0
   
   // 清理动画帧
   if (progressAnimationFrame.value) {
@@ -1037,6 +1135,85 @@ function endProgressDrag() {
 function getTaskBarWidth(task: GanttTask): number {
   const duration = Math.floor((task.endDate.getTime() - task.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
   return duration * props.cellWidth
+}
+
+// 以下函数已废弃，因为父子任务进度现在完全独立
+// 计算父任务进度（基于子任务的加权平均）- 已废弃
+/*
+function calculateParentProgress(parentTask: GanttTask): number {
+  if (!parentTask.children || parentTask.children.length === 0) {
+    return parentTask.progress
+  }
+  
+  let totalWeight = 0
+  let weightedProgress = 0
+  
+  parentTask.children.forEach(child => {
+    // 使用任务持续时间作为权重
+    const duration = Math.floor((child.endDate.getTime() - child.startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    totalWeight += duration
+    weightedProgress += child.progress * duration
+  })
+  
+  return totalWeight > 0 ? Math.round(weightedProgress / totalWeight) : 0
+}
+
+// 更新父任务进度 - 已废弃
+function updateParentProgress(childTask: GanttTask) {
+  if (!childTask.parentId) return
+  
+  // 在原始任务数组中查找父任务
+  const parentTask = props.tasks.find(task => task.id === childTask.parentId)
+  if (parentTask) {
+    const newProgress = calculateParentProgress(parentTask)
+    if (parentTask.progress !== newProgress) {
+      parentTask.progress = newProgress
+      // 递归更新上级父任务
+      updateParentProgress(parentTask)
+    }
+  }
+}
+*/
+
+// 获取任务的最大允许进度（父子任务进度独立）
+function getMaxAllowedProgress(task: GanttTask): number {
+  // 所有任务的最大进度都是100%，不受父子关系影响
+  return 100
+}
+
+// 获取任务的最小允许进度（父子任务进度独立）
+function getMinAllowedProgress(task: GanttTask): number {
+  // 所有任务的最小进度都是0%，不受父子关系影响
+  return 0
+}
+
+// 验证并调整进度值
+function validateAndAdjustProgress(task: GanttTask, newProgress: number): number {
+  const maxProgress = getMaxAllowedProgress(task)
+  const minProgress = getMinAllowedProgress(task)
+  
+  return Math.max(minProgress, Math.min(maxProgress, newProgress))
+}
+
+// 获取进度手柄的提示信息
+function getProgressHandleTooltip(task: GanttTask): string {
+  let tooltip = `当前进度: ${task.progress}%`
+  
+  if (task.children && task.children.length > 0) {
+    const childProgresses = task.children.map(child => `${child.name}: ${child.progress}%`).join('\n')
+    tooltip += `\n\n子任务进度:\n${childProgresses}`
+    tooltip += `\n\n注意: 父子任务进度独立，互不影响`
+  } else if (task.parentId) {
+    const parentTask = props.tasks.find(t => t.id === task.parentId)
+    if (parentTask) {
+      tooltip += `\n父任务: ${parentTask.name} (${parentTask.progress}%)`
+    }
+    tooltip += `\n\n注意: 父子任务进度独立，互不影响`
+  }
+  
+  tooltip += `\n\n进度范围: 0% - 100%`
+  
+  return tooltip
 }
 
 // 计算滑块标签位置
